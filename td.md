@@ -1,0 +1,3 @@
+- history
+- info agen
+- inventory

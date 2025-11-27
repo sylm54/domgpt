@@ -1,0 +1,211 @@
+@import "tailwindcss";
+/* @biome */
+@plugin "tailwindcss-animate";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+    --radius: 0.75rem;
+    /* Strong Pink Background */
+    --background: oklch(0.92 0.06 350);
+    /* Dark text for contrast */
+    --foreground: oklch(0.2 0.02 350);
+    /* White cards with subtle pink tint */
+    --card: oklch(0.99 0.01 350);
+    --card-foreground: oklch(0.2 0.02 350);
+    --popover: oklch(0.99 0.01 350);
+    --popover-foreground: oklch(0.2 0.02 350);
+    /* Strong vibrant pink primary */
+    --primary: oklch(0.55 0.28 350);
+    /* White foreground on primary */
+    --primary-foreground: oklch(1 0 0);
+    /* Light pink secondary */
+    --secondary: oklch(0.95 0.04 350);
+    --secondary-foreground: oklch(0.3 0.05 350);
+    /* Muted pink tones */
+    --muted: oklch(0.88 0.05 350);
+    --muted-foreground: oklch(0.45 0.03 350);
+    /* Accent - bright pink */
+    --accent: oklch(0.85 0.1 350);
+    --accent-foreground: oklch(0.25 0.05 350);
+    /* Destructive red-pink */
+    --destructive: oklch(0.55 0.25 15);
+    /* Pink-tinted borders */
+    --border: oklch(0.85 0.08 350);
+    --input: oklch(0.95 0.03 350);
+    --ring: oklch(0.6 0.25 350);
+    /* Charts with pink palette */
+    --chart-1: oklch(0.55 0.28 350);
+    --chart-2: oklch(0.65 0.22 340);
+    --chart-3: oklch(0.75 0.18 330);
+    --chart-4: oklch(0.6 0.2 10);
+    --chart-5: oklch(0.7 0.15 320);
+    /* Sidebar with strong pink */
+    --sidebar: oklch(0.5 0.26 350);
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(1 0 0);
+    --sidebar-primary-foreground: oklch(0.5 0.26 350);
+    --sidebar-accent: oklch(0.6 0.22 350);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(0.55 0.2 350);
+    --sidebar-ring: oklch(0.7 0.2 350);
+}
+
+.dark {
+    /* Deep pink-tinted dark background */
+    --background: oklch(0.18 0.05 350);
+    /* Light text */
+    --foreground: oklch(0.95 0.02 350);
+    /* Dark cards with pink undertone */
+    --card: oklch(0.22 0.04 350);
+    --card-foreground: oklch(0.95 0.02 350);
+    --popover: oklch(0.22 0.04 350);
+    --popover-foreground: oklch(0.95 0.02 350);
+    /* Bright pink primary in dark mode */
+    --primary: oklch(0.7 0.25 350);
+    /* Dark foreground on bright primary */
+    --primary-foreground: oklch(0.15 0.02 350);
+    /* Dark secondary */
+    --secondary: oklch(0.28 0.04 350);
+    --secondary-foreground: oklch(0.95 0.02 350);
+    /* Dark muted tones */
+    --muted: oklch(0.28 0.04 350);
+    --muted-foreground: oklch(0.7 0.03 350);
+    /* Accent */
+    --accent: oklch(0.35 0.08 350);
+    --accent-foreground: oklch(0.95 0.02 350);
+    /* Destructive */
+    --destructive: oklch(0.65 0.22 15);
+    /* Dark borders */
+    --border: oklch(0.35 0.06 350);
+    --input: oklch(0.3 0.05 350);
+    --ring: oklch(0.6 0.2 350);
+    /* Dark charts */
+    --chart-1: oklch(0.65 0.25 350);
+    --chart-2: oklch(0.7 0.2 340);
+    --chart-3: oklch(0.75 0.15 330);
+    --chart-4: oklch(0.65 0.18 10);
+    --chart-5: oklch(0.7 0.12 320);
+    /* Dark sidebar */
+    --sidebar: oklch(0.22 0.04 350);
+    --sidebar-foreground: oklch(0.95 0.02 350);
+    --sidebar-primary: oklch(0.7 0.25 350);
+    --sidebar-primary-foreground: oklch(0.95 0.02 350);
+    --sidebar-accent: oklch(0.3 0.06 350);
+    --sidebar-accent-foreground: oklch(0.95 0.02 350);
+    --sidebar-border: oklch(0.35 0.06 350);
+    --sidebar-ring: oklch(0.6 0.2 350);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Custom scrollbar with pink theme */
+@layer base {
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: oklch(0.9 0.04 350);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: oklch(0.65 0.2 350);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: oklch(0.55 0.25 350);
+    }
+
+    .dark ::-webkit-scrollbar-track {
+        background: oklch(0.25 0.03 350);
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        background: oklch(0.5 0.15 350);
+    }
+
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: oklch(0.6 0.2 350);
+    }
+}
+
+/* Pink gradient utilities */
+@layer utilities {
+    .bg-pink-gradient {
+        background: linear-gradient(
+            135deg,
+            oklch(0.92 0.06 350),
+            oklch(0.88 0.1 345)
+        );
+    }
+
+    .bg-pink-gradient-dark {
+        background: linear-gradient(
+            135deg,
+            oklch(0.18 0.05 350),
+            oklch(0.22 0.08 345)
+        );
+    }
+
+    .text-pink-gradient {
+        background: linear-gradient(
+            135deg,
+            oklch(0.55 0.28 350),
+            oklch(0.65 0.25 340)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}
