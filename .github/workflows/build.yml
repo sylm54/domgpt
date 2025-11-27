@@ -81,16 +81,32 @@ jobs:
           prerelease: false
           tauriScript: "bun tauri"
           args: ${{ matrix.args }}
-      - uses: tauri-apps/tauri-action@v0.6.0
+      - name: Build Android APK
         if: matrix.platform == 'ubuntu-22.04'
+        run: bun run tauri android build --apk
+
+      - name: Build Android AAB
+        if: matrix.platform == 'ubuntu-22.04'
+        run: bun run tauri android build --aab
+
+      - name: Get version from tauri.conf.json
+        if: matrix.platform == 'ubuntu-22.04'
+        id: get_version
+        run: |
+          VERSION=$(grep -oP '"version":\s*"\K[^"]+' src-tauri/tauri.conf.json | head -1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Upload Android APK to Release
+        if: matrix.platform == 'ubuntu-22.04'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: app-v${{ steps.get_version.outputs.version }}
+          name: "App v${{ steps.get_version.outputs.version }}"
+          body: "See the assets to download this version and install."
+          draft: true
+          prerelease: false
+          files: |
+            src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
+            src-tauri/gen/android/app/build/outputs/bundle/universalRelease/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: app-v__VERSION__-linux # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          prerelease: false
-          tauriScript: "bun tauri"
-          args: ${{ matrix.args }}
-          mobile: "android"
