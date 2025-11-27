@@ -44,6 +44,28 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: setup Java JDK (for Android)
+        if: matrix.platform == 'ubuntu-22.04'
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: setup Android SDK (for Android)
+        if: matrix.platform == 'ubuntu-22.04'
+        uses: android-actions/setup-android@v3
+
+      - name: install Android NDK (for Android)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sdkmanager --install "ndk;27.0.11902837"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.11902837" >> $GITHUB_ENV
+
+      - name: add Android targets (for Android)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
       - uses: oven-sh/setup-bun@v2
       - name: install frontend dependencies
         run: bun install # change this to npm, pnpm or bun depending on which one you use.
@@ -55,6 +77,20 @@ jobs:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
           releaseBody: "See the assets to download this version and install."
+          releaseDraft: false
+          prerelease: false
+          tauriScript: "bun tauri"
+          args: ${{ matrix.args }}
+      - uses: tauri-apps/tauri-action@v0.6.0
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__-linux # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: "App v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false
+          tauriScript: "bun tauri"
           args: ${{ matrix.args }}
+          mobile: "android"
