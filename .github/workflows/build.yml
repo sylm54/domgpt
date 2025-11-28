@@ -82,6 +82,14 @@ jobs:
           prerelease: false
           tauriScript: "bun tauri"
           args: ${{ matrix.args }}
+      - name: Download ONNX Runtime for Android
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          mkdir -p $HOME/onnxruntime-android
+          curl -L https://github.com/microsoft/onnxruntime/releases/download/v1.19.2/onnxruntime-android-1.19.2.aar -o onnxruntime.aar
+          unzip onnxruntime.aar -d $HOME/onnxruntime-android
+          echo "ORT_LIB_LOCATION=$HOME/onnxruntime-android/jni" >> $GITHUB_ENV
+
       - name: Build Android APK
         if: matrix.platform == 'ubuntu-22.04'
         run: bun run tauri android build --apk
