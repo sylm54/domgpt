@@ -94,19 +94,24 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           mkdir -p src-tauri/.cargo
-          cat > src-tauri/.cargo/config.toml << EOF
+          ORT_JNI_PATH="/home/runner/onnxruntime-android/jni"
+          cat > src-tauri/.cargo/config.toml <<EOF
           [target.aarch64-linux-android]
-          rustflags = ["-L", "$HOME/onnxruntime-android/jni/arm64-v8a"]
+          rustflags = ["-L", "$ORT_JNI_PATH/arm64-v8a"]
 
           [target.armv7-linux-androideabi]
-          rustflags = ["-L", "$HOME/onnxruntime-android/jni/armeabi-v7a"]
+          rustflags = ["-L", "$ORT_JNI_PATH/armeabi-v7a"]
 
           [target.i686-linux-android]
-          rustflags = ["-L", "$HOME/onnxruntime-android/jni/x86"]
+          rustflags = ["-L", "$ORT_JNI_PATH/x86"]
 
           [target.x86_64-linux-android]
-          rustflags = ["-L", "$HOME/onnxruntime-android/jni/x86_64"]
+          rustflags = ["-L", "$ORT_JNI_PATH/x86_64"]
           EOF
+          echo "Generated config.toml:"
+          cat src-tauri/.cargo/config.toml
+          echo "Checking ORT library files:"
+          ls -la $ORT_JNI_PATH/arm64-v8a/
 
       - name: Build Android APK
         if: matrix.platform == 'ubuntu-22.04'
