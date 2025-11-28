@@ -88,14 +88,60 @@ jobs:
           mkdir -p $HOME/onnxruntime-android
           wget -q https://repo1.maven.org/maven2/com/microsoft/onnxruntime/onnxruntime-android/1.19.2/onnxruntime-android-1.19.2.aar -O onnxruntime.aar
           unzip -o onnxruntime.aar -d $HOME/onnxruntime-android
-          echo "ORT_LIB_LOCATION=$HOME/onnxruntime-android/jni" >> $GITHUB_ENV
-          # Set target-specific rustflags via environment variables
-          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS=-L /home/runner/onnxruntime-android/jni/arm64-v8a" >> $GITHUB_ENV
-          echo "CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_RUSTFLAGS=-L /home/runner/onnxruntime-android/jni/armeabi-v7a" >> $GITHUB_ENV
-          echo "CARGO_TARGET_I686_LINUX_ANDROID_RUSTFLAGS=-L /home/runner/onnxruntime-android/jni/x86" >> $GITHUB_ENV
-          echo "CARGO_TARGET_X86_64_LINUX_ANDROID_RUSTFLAGS=-L /home/runner/onnxruntime-android/jni/x86_64" >> $GITHUB_ENV
+
+          # Create architecture-specific ORT directories that ort-sys expects
+          ORT_BASE="/home/runner/ort-libs"
+          mkdir -p "$ORT_BASE/aarch64-linux-android/lib"
+          mkdir -p "$ORT_BASE/armv7-linux-androideabi/lib"
+          mkdir -p "$ORT_BASE/i686-linux-android/lib"
+          mkdir -p "$ORT_BASE/x86_64-linux-android/lib"
+
+          # Copy libraries to the expected locations
+          cp $HOME/onnxruntime-android/jni/arm64-v8a/libonnxruntime.so "$ORT_BASE/aarch64-linux-android/lib/"
+          cp $HOME/onnxruntime-android/jni/armeabi-v7a/libonnxruntime.so "$ORT_BASE/armv7-linux-androideabi/lib/"
+          cp $HOME/onnxruntime-android/jni/x86/libonnxruntime.so "$ORT_BASE/i686-linux-android/lib/"
+          cp $HOME/onnxruntime-android/jni/x86_64/libonnxruntime.so "$ORT_BASE/x86_64-linux-android/lib/"
+
+          # Set ORT_LIB_LOCATION to the base directory (ort-sys will append target/lib)
+          echo "ORT_LIB_LOCATION=$ORT_BASE" >> $GITHUB_ENV
+
+          # Also set library search paths for the linker
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_RUSTFLAGS=-L $ORT_BASE/aarch64-linux-android/lib" >> $GITHUB_ENV
+          echo "CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_RUSTFLAGS=-L $ORT_BASE/armv7-linux-androideabi/lib" >> $GITHUB_ENV
+          echo "CARGO_TARGET_I686_LINUX_ANDROID_RUSTFLAGS=-L $ORT_BASE/i686-linux-android/lib" >> $GITHUB_ENV
+          echo "CARGO_TARGET_X86_64_LINUX_ANDROID_RUSTFLAGS=-L $ORT_BASE/x86_64-linux-android/lib" >> $GITHUB_ENV
+          # Copy libonnxruntime.so to a single flat directory
+          ORT_LIB_DIR="/home/runner/ort-lib"
+          mkdir -p "$ORT_LIB_DIR"
+
+          # Copy arm64-v8a as the primary (for aarch64 builds)
+          cp $HOME/onnxruntime-android/jni/arm64-v8a/libonnxruntime.so "$ORT_LIB_DIR/"
+
+          echo "ORT_LIB_LOCATION=$ORT_LIB_DIR" >> $GITHUB_ENV
+
           echo "Checking ORT library files:"
-          ls -la /home/runner/onnxruntime-android/jni/arm64-v8a/
+          ls -laR $ORT_BASE/
+          ls -la $ORT_LIB_DIR/
+
+      - name: Setup Cargo config for Android ORT linking
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          mkdir -p ~/.cargo
+          cat >> ~/.cargo/config.toml << 'EOF'
+          [target.aarch64-linux-android]
+          rustflags = ["-L", "/home/runner/ort-lib"]
+
+          [target.armv7-linux-androideabi]
+          rustflags = ["-L", "/home/runner/onnxruntime-android/jni/armeabi-v7a"]
+
+          [target.i686-linux-android]
+          rustflags = ["-L", "/home/runner/onnxruntime-android/jni/x86"]
+
+          [target.x86_64-linux-android]
+          rustflags = ["-L", "/home/runner/onnxruntime-android/jni/x86_64"]
+          EOF
+          echo "Cargo config:"
+          cat ~/.cargo/config.toml
 
       - name: Build Android APK
         if: matrix.platform == 'ubuntu-22.04'
