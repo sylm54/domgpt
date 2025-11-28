@@ -61,6 +61,7 @@ jobs:
         run: |
           sdkmanager --install "ndk;27.0.11902837"
           echo "NDK_HOME=$ANDROID_HOME/ndk/27.0.11902837" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/ndk/27.0.11902837/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
 
       - name: add Android targets (for Android)
         if: matrix.platform == 'ubuntu-22.04'
