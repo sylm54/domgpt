@@ -89,10 +89,24 @@ jobs:
           wget -q https://repo1.maven.org/maven2/com/microsoft/onnxruntime/onnxruntime-android/1.19.2/onnxruntime-android-1.19.2.aar -O onnxruntime.aar
           unzip -o onnxruntime.aar -d $HOME/onnxruntime-android
           echo "ORT_LIB_LOCATION=$HOME/onnxruntime-android/jni" >> $GITHUB_ENV
-          # Set library search paths for each Android architecture
-          echo "RUSTFLAGS=-L $HOME/onnxruntime-android/jni/arm64-v8a -L $HOME/onnxruntime-android/jni/armeabi-v7a -L $HOME/onnxruntime-android/jni/x86 -L $HOME/onnxruntime-android/jni/x86_64" >> $GITHUB_ENV
-          # Also set LD_LIBRARY_PATH for runtime
-          echo "LD_LIBRARY_PATH=$HOME/onnxruntime-android/jni/arm64-v8a:$HOME/onnxruntime-android/jni/armeabi-v7a:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Setup Cargo config for Android
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          mkdir -p src-tauri/.cargo
+          cat > src-tauri/.cargo/config.toml << EOF
+          [target.aarch64-linux-android]
+          rustflags = ["-L", "$HOME/onnxruntime-android/jni/arm64-v8a"]
+
+          [target.armv7-linux-androideabi]
+          rustflags = ["-L", "$HOME/onnxruntime-android/jni/armeabi-v7a"]
+
+          [target.i686-linux-android]
+          rustflags = ["-L", "$HOME/onnxruntime-android/jni/x86"]
+
+          [target.x86_64-linux-android]
+          rustflags = ["-L", "$HOME/onnxruntime-android/jni/x86_64"]
+          EOF
 
       - name: Build Android APK
         if: matrix.platform == 'ubuntu-22.04'
