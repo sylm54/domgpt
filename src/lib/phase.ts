@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import type { Phase } from "@/config";
 
 export const PHASE_STORAGE_KEY = "user-phase-state";
+export const PHASES_STORAGE_KEY = "user-phases";
 export const PHASE_EVENT_NAME = "phase-changed";
+export const PHASES_EVENT_NAME = "phases-changed";
 
 export interface PhaseState {
   currentPhaseIndex: number;
@@ -120,4 +123,118 @@ export function usePhaseState() {
   }, []);
 
   return state;
+}
+
+// ============================================
+// Phases Array Storage (localStorage-backed)
+// ============================================
+
+/**
+ * Load phases array from localStorage
+ */
+export function loadPhases(): Phase[] {
+  try {
+    const stored = localStorage.getItem(PHASES_STORAGE_KEY);
+    if (!stored) {
+      return [];
+    }
+    const data = JSON.parse(stored);
+    if (!Array.isArray(data)) {
+      return [];
+    }
+    return data as Phase[];
+  } catch (error) {
+    console.error("Failed to load phases:", error);
+    return [];
+  }
+}
+
+/**
+ * Save phases array to localStorage and dispatch event
+ */
+export function savePhases(phases: Phase[]): void {
+  try {
+    localStorage.setItem(PHASES_STORAGE_KEY, JSON.stringify(phases));
+    window.dispatchEvent(
+      new CustomEvent(PHASES_EVENT_NAME, { detail: phases }),
+    );
+  } catch (error) {
+    console.error("Failed to save phases:", error);
+  }
+}
+
+/**
+ * Add a new phase to the phases array
+ */
+export function addPhase(phase: Phase): void {
+  const phases = loadPhases();
+  phases.push(phase);
+  savePhases(phases);
+}
+
+/**
+ * Update an existing phase by index
+ */
+export function updatePhase(index: number, phase: Phase): void {
+  const phases = loadPhases();
+  if (index >= 0 && index < phases.length) {
+    phases[index] = phase;
+    savePhases(phases);
+  }
+}
+
+/**
+ * Remove a phase by index
+ */
+export function removePhase(index: number): void {
+  const phases = loadPhases();
+  if (index >= 0 && index < phases.length) {
+    phases.splice(index, 1);
+    savePhases(phases);
+  }
+}
+
+/**
+ * Clear all phases
+ */
+export function clearPhases(): void {
+  savePhases([]);
+}
+
+/**
+ * Set all phases at once (replaces existing)
+ */
+export function setPhases(phases: Phase[]): void {
+  savePhases(phases);
+}
+
+/**
+ * React hook to subscribe to phases changes
+ */
+export function usePhases() {
+  const [phases, setPhasesState] = useState<Phase[]>(loadPhases());
+
+  useEffect(() => {
+    const handlePhasesChange = (event: Event) => {
+      const customEvent = event as CustomEvent<Phase[]>;
+      setPhasesState(customEvent.detail);
+    };
+
+    window.addEventListener(PHASES_EVENT_NAME, handlePhasesChange);
+
+    // Also update on storage event (for cross-tab sync if needed)
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === PHASES_STORAGE_KEY) {
+        setPhasesState(loadPhases());
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener(PHASES_EVENT_NAME, handlePhasesChange);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  return phases;
 }

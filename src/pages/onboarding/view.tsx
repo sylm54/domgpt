@@ -29,6 +29,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
+import PhasePlannerStep from "./PhasePlannerStep";
 
 // Storage keys
 const API_KEY_STORAGE = "openrouter_api_key";
@@ -429,6 +430,8 @@ function ApiKeySetupStep({ onComplete, onBack, isFirstStep }: StepProps) {
     setAffirmModelName(storedAffirm);
   }, []);
 
+  const [saved, setSaved] = useState(false);
+
   const handleSave = async () => {
     setSaving(true);
     setStatus(null);
@@ -451,52 +454,8 @@ function ApiKeySetupStep({ onComplete, onBack, isFirstStep }: StepProps) {
       } else {
         localStorage.removeItem(AFFIRM_MODEL_STORAGE);
       }
-
-      // Set model name in config models
-      try {
-        (configModel as OpenRouterModel).setModelName(modelName.trim());
-      } catch (err) {
-        console.warn("setModelName for main model failed:", err);
-      }
-
-      try {
-        (configTalkModel as OpenRouterModel).setModelName(
-          talkModelName.trim() || modelName.trim(),
-        );
-      } catch (err) {
-        console.warn("setModelName for talk model failed:", err);
-      }
-
-      try {
-        (configAffirmModel as OpenRouterModel).setModelName(
-          affirmModelName.trim() || modelName.trim(),
-        );
-      } catch (err) {
-        console.warn("setModelName for affirm model failed:", err);
-      }
-
-      const openRouter = new OpenRouter({
-        apiKey: apiKey.trim(),
-        httpClient: new HTTPClient({
-          fetcher: fetch,
-        }),
-      });
-
-      await initMainAgent(openRouter);
-
-      // Mark onboarding as complete
-      localStorage.setItem(ONBOARDING_COMPLETED, "true");
-      localStorage.removeItem(ONBOARDING_STEP);
-
-      setStatus({
-        type: "success",
-        message: "Setup complete! Launching app...",
-      });
-
-      // Reload to start the app
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      setStatus({ type: "success", message: "Configuration saved!" });
+      setSaved(true);
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : String(err ?? "Unknown error");
@@ -620,23 +579,33 @@ function ApiKeySetupStep({ onComplete, onBack, isFirstStep }: StepProps) {
             Back
           </Button>
         )}
-        <Button
-          onClick={handleSave}
-          disabled={saving || !apiKey.trim() || !modelName.trim()}
-          className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-6 px-8 rounded-xl shadow-lg shadow-pink-300/30 disabled:opacity-50"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Setting up...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5 mr-2" />
-              Complete Setup
-            </>
-          )}
-        </Button>
+        {!saved ? (
+          <Button
+            onClick={handleSave}
+            disabled={saving || !apiKey.trim() || !modelName.trim()}
+            className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-6 px-8 rounded-xl shadow-lg shadow-pink-300/30 disabled:opacity-50"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 mr-2" />
+                Save Configuration
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            onClick={onComplete}
+            className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-semibold py-6 px-8 rounded-xl shadow-lg shadow-pink-300/30"
+          >
+            Continue
+            <ChevronRight className="w-5 h-5 ml-2" />
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -663,6 +632,13 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "API Setup",
     description: "Configure your API key",
     component: ApiKeySetupStep,
+    canSkip: false,
+  },
+  {
+    id: "phase-planner",
+    title: "Plan Journey",
+    description: "Create your personalized phases",
+    component: PhasePlannerStep,
     canSkip: false,
   },
 ];

@@ -245,6 +245,7 @@ export type Config = {
   };
   sysprompts: {
     planner_agent?: string;
+    phase_planner_agent?: string;
     info_agent?: string;
     interview_agent?: string;
     challenge_agent?: string;

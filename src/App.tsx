@@ -35,7 +35,7 @@ import { ConfigProvider } from "./contexts/ConfigContext";
 import { backgroundJobs, type BackgroundJob } from "./lib/backgroundJobs";
 import { OnboardingView, isOnboardingCompleted } from "./pages/onboarding";
 
-const API_KEY_STORAGE = "openrouter_api_key";
+export const API_KEY_STORAGE = "openrouter_api_key";
 const MODEL_STORAGE = "openrouter_model";
 
 const TopRouteWrapper: FC = () => {

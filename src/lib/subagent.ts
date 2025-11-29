@@ -2,7 +2,7 @@ import z from "zod";
 import { Agent } from "./agent";
 import { tool, Tool } from "./models";
 
-type Agentdef = {
+export type Agentdef = {
   name: string;
   reasoning: "low" | "medium" | "high" | "minimal";
   description: string;

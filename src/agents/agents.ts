@@ -4,6 +4,7 @@ import { affirmmodel, getConfig, model, talkmodel } from "@/config";
 import {
   markChallengeReady as markPhaseReady,
   loadPhaseState,
+  loadPhases,
 } from "@/lib/phase";
 import { backgroundJobs } from "@/lib/backgroundJobs";
 
@@ -17,7 +18,12 @@ import {
   wrapInteractiveSystem,
 } from "@/lib/context";
 import { memoryTool } from "@/lib/memory";
-import { getAgentPrompt, subAgentsTool, subAgentTool } from "@/lib/subagent";
+import {
+  Agentdef,
+  getAgentPrompt,
+  subAgentsTool,
+  subAgentTool,
+} from "@/lib/subagent";
 import { affirm_tools } from "@/pages/affirm/agent";
 import { challenge_tools } from "@/pages/challenge/agent";
 import { loadProfileData } from "@/pages/profile";
@@ -230,7 +236,7 @@ Be concise and friendly.
   ],
 );
 
-const sub_agents = [
+const sub_agents: Agentdef[] = [
   {
     name: config.agent_names?.challenge_agent ?? "challenge",
     reasoning: "minimal",
@@ -353,7 +359,7 @@ export function isInitialized() {
   return init;
 }
 function getPhaseContextPrompt(): string {
-  const phases = config.phases || [];
+  const phases = loadPhases();
   const state = loadPhaseState();
   const currentIndex = state.currentPhaseIndex;
 

@@ -16,7 +16,7 @@ import {
 } from "./types";
 import { getConfig } from "@/config";
 import type { Phase } from "@/config";
-import { usePhaseState, completeChallenge } from "@/lib/phase";
+import { usePhaseState, completeChallenge, usePhases } from "@/lib/phase";
 import { PhaseTimeline } from "@/components/PhaseTimeline";
 import { PhaseChallenge } from "@/components/PhaseChallenge";
 
@@ -29,7 +29,7 @@ export default function ProfileView() {
     fields: {},
   });
   const [profileFields, setProfileFields] = useState<string[]>([]);
-  const [phases, setPhases] = useState<Phase[]>([]);
+  const phases = usePhases();
   const phaseState = usePhaseState();
 
   useEffect(() => {
@@ -39,9 +39,6 @@ export default function ProfileView() {
     getConfig().then((config) => {
       if (config.profile_fields) {
         setProfileFields(config.profile_fields);
-      }
-      if (config.phases) {
-        setPhases(config.phases);
       }
     });
   }, []);
