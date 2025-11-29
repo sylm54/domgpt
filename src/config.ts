@@ -329,8 +329,21 @@ export async function getConfig(): Promise<Config> {
   let configDir: string | null = null;
   configDir = await appConfigDir();
   console.log("Config directory (AppConfig):", configDir);
-  const contents = await readTextFile(CONFIG_NAME, {
-    baseDir: CONFIG_BASE_DIR,
-  });
-  return JSON.parse(contents);
+  try {
+    const contents = await readTextFile(CONFIG_NAME, {
+      baseDir: CONFIG_BASE_DIR,
+    });
+    return JSON.parse(contents);
+  } catch (error) {
+    console.log("Config file not found or unreadable, using defaults:", error);
+    // Return a default empty config when the file doesn't exist
+    return {
+      main_system_prompt: "",
+      re_agent: "",
+      prompts: {},
+      sysprompts: {},
+      agent_names: {},
+      agent_descriptions: {},
+    };
+  }
 }
