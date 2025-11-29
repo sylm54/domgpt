@@ -10,6 +10,8 @@
     "fs:default",
     "fs:allow-app-read",
     "fs:allow-app-write",
+    "clipboard-manager:allow-read",
+    "clipboard-manager:allow-write",
 
     "http:default",
     {

@@ -25,6 +25,7 @@ serde_json = "1"
 tauri-plugin-cors-fetch = "4.1.0"
 tauri-plugin-fs = "2"
 tauri-plugin-http = "2"
+tauri-plugin-clipboard-manager = "2"
 ort = "2.0.0-rc.7"
 openssl = { version = "0.10", features = ["vendored"] }
 # Array processing (like NumPy)

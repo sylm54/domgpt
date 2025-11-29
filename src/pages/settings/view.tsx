@@ -11,6 +11,7 @@ import {
 } from "@/config";
 import { fetch } from "@tauri-apps/plugin-http";
 import { BaseDirectory, writeTextFile } from "@tauri-apps/plugin-fs";
+import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 import {
   Save,
   Download,
@@ -135,7 +136,7 @@ export default function SettingsView() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
       const data: Record<string, string> = {};
       for (let i = 0; i < localStorage.length; i++) {
@@ -145,7 +146,7 @@ export default function SettingsView() {
         }
       }
 
-      navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      await writeText(JSON.stringify(data, null, 2));
       setExportStatus("Exported to clipboard!");
       setTimeout(() => setExportStatus(""), 3000);
     } catch (err) {
@@ -157,7 +158,7 @@ export default function SettingsView() {
 
   const handleImport = async () => {
     try {
-      const clipboardText = await navigator.clipboard.readText();
+      const clipboardText = await readText();
 
       let data: Record<string, string>;
       try {
@@ -206,7 +207,7 @@ export default function SettingsView() {
 
   const handleConfigImport = async () => {
     try {
-      const clipboardText = await navigator.clipboard.readText();
+      const clipboardText = await readText();
 
       // Validate JSON
       let configData: unknown;
