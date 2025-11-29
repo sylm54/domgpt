@@ -4,6 +4,7 @@ import { tool, Tool } from "./models";
 
 type Agentdef = {
   name: string;
+  reasoning: "low" | "medium" | "high" | "minimal";
   description: string;
   agent: Agent;
 };
@@ -29,6 +30,7 @@ export function subAgentsTool(agents: Agentdef[]): Tool {
         },
         {
           workflow_name: "SubAgent-" + name,
+          reasoning: agent.reasoning,
         },
       );
       const res =

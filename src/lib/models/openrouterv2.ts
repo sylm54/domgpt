@@ -313,6 +313,7 @@ export class OpenRouterModel extends Model {
           model: this.modelname,
           messages: input,
           tools: tooldefs,
+
           stream: false,
           maxTokens: options?.max_tokens,
           temperature: options?.temperature,

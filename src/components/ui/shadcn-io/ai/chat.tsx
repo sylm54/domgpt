@@ -25,7 +25,7 @@ import { Response } from "./response";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "./reasoning";
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from "./tool";
 import { Loader } from "./loader";
-
+import { Tool as ToolType } from "../../../../lib/models";
 type ChatProps = {
   agent: Agent;
   className?: string;
@@ -38,6 +38,15 @@ type ChatProps = {
    * Placeholder text for the prompt box
    */
   placeholder?: string;
+
+  tool_display?: (tool: {
+    type: "tool";
+    id: string;
+    tool: string;
+    tool_input: string;
+    tool_output?: string;
+    tool_data?: object;
+  }) => React.ReactNode;
 };
 
 /**
@@ -55,6 +64,7 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
     className,
     userAvatarSrc,
     assistantAvatarSrc,
+    tool_display,
     placeholder = "What would you like to know?",
   },
   ref,
@@ -220,7 +230,9 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
           typeof part.tool_output !== "undefined" && part.tool_output !== null;
         const toolState = hasOutput ? "output-available" : "input-available";
         const headerType = part.tool ?? part.id ?? "tool";
-
+        if (tool_display) {
+          return tool_display(part);
+        }
         return (
           <Tool key={idx} className="overflow-auto">
             <ToolHeader type={`tool-${headerType}`} state={toolState} />

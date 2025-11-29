@@ -3,7 +3,7 @@
 mod script_to_audio;
 mod ttslib;
 
-use script_to_audio::generate_audio;
+use script_to_audio::{check_tts_models, download_tts_models, generate_audio};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -18,7 +18,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_cors_fetch::init())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .invoke_handler(tauri::generate_handler![greet, generate_audio])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            generate_audio,
+            download_tts_models,
+            check_tts_models
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -33,6 +33,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import NavHeader from "./components/NavHeader";
 import { ConfigProvider } from "./contexts/ConfigContext";
 import { backgroundJobs, type BackgroundJob } from "./lib/backgroundJobs";
+import { OnboardingView, isOnboardingCompleted } from "./pages/onboarding";
 
 const API_KEY_STORAGE = "openrouter_api_key";
 const MODEL_STORAGE = "openrouter_model";
@@ -110,7 +111,16 @@ const TopRouteWrapper: FC = () => {
   }, []);
 
   useEffect(() => {
-    // On mount, attempt an automatic initialization if both values exist.
+    // On mount, check if onboarding is needed first
+    const onboardingComplete = isOnboardingCompleted();
+
+    if (!onboardingComplete) {
+      // Redirect to onboarding if not completed
+      navigate("/onboarding");
+      return;
+    }
+
+    // Attempt an automatic initialization if both values exist
     const storedKey = localStorage.getItem(API_KEY_STORAGE);
     const storedModel = localStorage.getItem(MODEL_STORAGE);
 
@@ -126,10 +136,19 @@ const TopRouteWrapper: FC = () => {
         navigate("/settings");
       });
     } else {
-      // redirect to settings to collect missing values
-      navigate("/settings");
+      // redirect to onboarding if API key missing (even if onboarding was marked complete)
+      navigate("/onboarding");
     }
   }, [initialize, navigate]);
+
+  // Always render onboarding page even if not ready
+  if (location.pathname === "/onboarding") {
+    return (
+      <ConfigProvider>
+        <Outlet />
+      </ConfigProvider>
+    );
+  }
 
   // Always render settings page even if not ready
   if (location.pathname === "/settings") {
@@ -200,6 +219,7 @@ export const router = createMemoryRouter(
       <Route path="workflows" element={<WorkflowsView />} />
       <Route path="activity" element={<ActivityView />} />
       <Route path="settings" element={<SettingsView />} />
+      <Route path="onboarding" element={<OnboardingView />} />
     </Route>,
   ),
   {

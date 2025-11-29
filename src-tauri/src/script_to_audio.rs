@@ -1608,6 +1608,112 @@ pub async fn generate_audio(
     })
 }
 
+/// Download TTS model files without generating audio
+/// This is used during onboarding to pre-download the models
+#[tauri::command]
+pub async fn download_tts_models(app_handle: AppHandle) -> Result<(), String> {
+    let job_id = format!(
+        "download-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()
+    );
+
+    // Get app data directory
+    let app_data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+
+    let onnx_dir = app_data_dir.join("models").join("onnx");
+    let voice_dir = app_data_dir.join("models").join("voice_styles");
+
+    // Emit start progress
+    let _ = app_handle.emit(
+        "tts-progress",
+        TtsProgressEvent {
+            job_id: job_id.clone(),
+            message: "Starting model download...".to_string(),
+            progress: 0.0,
+            stage: "start".to_string(),
+        },
+    );
+
+    // Download model files
+    ensure_model_files(&onnx_dir, Some(&app_handle), &job_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Emit midpoint
+    let _ = app_handle.emit(
+        "tts-progress",
+        TtsProgressEvent {
+            job_id: job_id.clone(),
+            message: "Downloading voice files...".to_string(),
+            progress: 0.6,
+            stage: "download".to_string(),
+        },
+    );
+
+    // Download voice files
+    ensure_voice_files(&voice_dir, Some(&app_handle), &job_id)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Emit completion
+    let _ = app_handle.emit(
+        "tts-progress",
+        TtsProgressEvent {
+            job_id: job_id.clone(),
+            message: "All models downloaded successfully!".to_string(),
+            progress: 1.0,
+            stage: "complete".to_string(),
+        },
+    );
+
+    Ok(())
+}
+
+/// Check if TTS model files are already downloaded
+#[tauri::command]
+pub async fn check_tts_models(app_handle: AppHandle) -> Result<bool, String> {
+    let app_data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+
+    let onnx_dir = app_data_dir.join("models").join("onnx");
+    let voice_dir = app_data_dir.join("models").join("voice_styles");
+
+    let model_files = [
+        "duration_predictor.onnx",
+        "text_encoder.onnx",
+        "vector_estimator.onnx",
+        "vocoder.onnx",
+        "tts.json",
+        "unicode_indexer.json",
+    ];
+
+    let voice_files = ["F1.json", "F2.json", "M1.json", "M2.json"];
+
+    // Check all model files exist
+    for file in model_files.iter() {
+        if !onnx_dir.join(file).exists() {
+            return Ok(false);
+        }
+    }
+
+    // Check all voice files exist
+    for file in voice_files.iter() {
+        if !voice_dir.join(file).exists() {
+            return Ok(false);
+        }
+    }
+
+    Ok(true)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

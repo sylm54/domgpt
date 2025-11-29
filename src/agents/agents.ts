@@ -233,6 +233,7 @@ Be concise and friendly.
 const sub_agents = [
   {
     name: config.agent_names?.challenge_agent ?? "challenge",
+    reasoning: "minimal",
     description:
       config.agent_descriptions?.challenge_agent ??
       "Agent that manages challenges. Can add and remove challenges.",
@@ -240,6 +241,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.profile_agent ?? "profile",
+    reasoning: "minimal",
     description:
       config.agent_descriptions?.profile_agent ??
       "Agent that manages profiles. Can change the Profile Title and Description and add and query Achievements.",
@@ -247,6 +249,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.rule_agent ?? "rule",
+    reasoning: "minimal",
     description:
       config.agent_descriptions?.rule_agent ??
       "Agent that manages rules. Can add,read,edit and delete rules.",
@@ -254,6 +257,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.reflection_agent ?? "reflection",
+    reasoning: "minimal",
     description:
       config.agent_descriptions?.reflection_agent ??
       "Agent that manages reflection prompts of the subject. Can add,read,edit and delete reflection prompts. Also can read recent reflection entries of the subject.",
@@ -261,6 +265,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.safe_agent ?? "safe",
+    reasoning: "minimal",
     description:
       config.agent_descriptions?.safe_agent ??
       "Agent that can check if the key of the subject is locked and how long it has been locked. Can also unlock the key.",
@@ -268,6 +273,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.affirm_agent ?? "audio",
+    reasoning: "high",
     description:
       config.agent_descriptions?.affirm_agent ??
       "Agent that can generate Audio files.",
@@ -275,6 +281,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.inventory_agent ?? "inventory",
+    reasoning: "low",
     description:
       config.agent_descriptions?.inventory_agent ??
       "Agent that manages inventory. Can read and search items.",
@@ -282,6 +289,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.rituals_agent ?? "rituals",
+    reasoning: "low",
     description:
       config.agent_descriptions?.rituals_agent ??
       "Agent that manages rituals. Can add, remove, and check status of rituals.",
@@ -289,6 +297,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.voice_agent ?? "voice",
+    reasoning: "low",
     description:
       config.agent_descriptions?.voice_agent ??
       "Agent that manages voice training. Can add assignments and check scores.",
@@ -296,6 +305,7 @@ const sub_agents = [
   },
   {
     name: config.agent_names?.activity_agent ?? "activity",
+    reasoning: "minimal",
     description:
       config.agent_descriptions?.activity_agent ??
       "Agent that can query user activity logs. Can see what the user has been doing, including challenges completed, rituals done, reflections saved, and more.",
