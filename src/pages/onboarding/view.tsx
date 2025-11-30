@@ -1,4 +1,4 @@
-import { useState, useEffect, useId, useCallback } from "react";
+import { useState, useEffect, useId, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { UnlistenFn } from "@tauri-apps/api/event";
@@ -23,6 +23,7 @@ import {
   KeyIcon,
   CpuIcon,
   FileJson,
+  FolderOpen,
   Sparkles,
   ChevronRight,
   ChevronLeft,
@@ -211,6 +212,8 @@ function ImportConfigStep({ onComplete, onBack, isFirstStep }: StepProps) {
     message: string;
   } | null>(null);
   const [importing, setImporting] = useState(false);
+  const configFileInputRef = useRef<HTMLInputElement>(null);
+  const localStorageFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleConfigImport = async () => {
     setImporting(true);
@@ -319,8 +322,177 @@ function ImportConfigStep({ onComplete, onBack, isFirstStep }: StepProps) {
     }
   };
 
+  const handleConfigFileImport = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        let configData: unknown;
+
+        try {
+          configData = JSON.parse(content);
+        } catch {
+          setImportStatus({
+            type: "error",
+            message: "Invalid JSON in file",
+          });
+          setImporting(false);
+          return;
+        }
+
+        if (typeof configData !== "object" || configData === null) {
+          setImportStatus({
+            type: "error",
+            message: "Config must be a JSON object",
+          });
+          setImporting(false);
+          return;
+        }
+
+        await writeTextFile(
+          "config.json",
+          JSON.stringify(configData, null, 2),
+          {
+            baseDir: BaseDirectory.AppConfig,
+          },
+        );
+
+        // Save onboarding progress before reload
+        localStorage.setItem(ONBOARDING_STEP, "2");
+
+        setImportStatus({
+          type: "success",
+          message: "Config imported! Reloading...",
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } catch (err) {
+        console.error("Failed to import config from file:", err);
+        setImportStatus({
+          type: "error",
+          message: `Failed to import: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      } finally {
+        setImporting(false);
+      }
+    };
+
+    reader.onerror = () => {
+      setImportStatus({
+        type: "error",
+        message: "Failed to read file",
+      });
+      setImporting(false);
+    };
+
+    reader.readAsText(file);
+    // Reset file input so the same file can be selected again
+    event.target.value = "";
+  };
+
+  const handleLocalStorageFileImport = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        let data: Record<string, string>;
+
+        try {
+          data = JSON.parse(content);
+        } catch {
+          setImportStatus({
+            type: "error",
+            message: "Invalid JSON in file",
+          });
+          setImporting(false);
+          return;
+        }
+
+        const keyCount = Object.keys(data).length;
+        if (
+          !window.confirm(
+            `Import ${keyCount} item(s) from file? This will merge with existing data and reload the app.`,
+          )
+        ) {
+          setImporting(false);
+          return;
+        }
+
+        // Save current onboarding step
+        const currentStep = localStorage.getItem(ONBOARDING_STEP);
+
+        // Import data
+        for (const [key, value] of Object.entries(data)) {
+          localStorage.setItem(key, value);
+        }
+
+        // Restore onboarding step if we're mid-onboarding
+        if (currentStep) {
+          localStorage.setItem(ONBOARDING_STEP, currentStep);
+        }
+
+        setImportStatus({ type: "success", message: "Imported! Reloading..." });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } catch (err) {
+        console.error("Failed to import localStorage from file:", err);
+        setImportStatus({
+          type: "error",
+          message: "Failed to import from file",
+        });
+      } finally {
+        setImporting(false);
+      }
+    };
+
+    reader.onerror = () => {
+      setImportStatus({
+        type: "error",
+        message: "Failed to read file",
+      });
+      setImporting(false);
+    };
+
+    reader.readAsText(file);
+    // Reset file input so the same file can be selected again
+    event.target.value = "";
+  };
+
   return (
     <div className="flex flex-col items-center justify-center flex-1 p-6 max-w-xl mx-auto">
+      {/* Hidden file inputs for file import */}
+      <input
+        ref={configFileInputRef}
+        type="file"
+        accept=".json,application/json"
+        onChange={handleConfigFileImport}
+        className="hidden"
+      />
+      <input
+        ref={localStorageFileInputRef}
+        type="file"
+        accept=".json,application/json"
+        onChange={handleLocalStorageFileImport}
+        className="hidden"
+      />
+
       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center mb-6 shadow-lg">
         <FileJson className="w-10 h-10 text-white" />
       </div>
@@ -334,27 +506,53 @@ function ImportConfigStep({ onComplete, onBack, isFirstStep }: StepProps) {
       </p>
 
       <div className="w-full space-y-4 mb-6">
-        <Button
-          onClick={handleConfigImport}
-          disabled={importing}
-          variant="outline"
-          className="w-full justify-start border-pink-200 hover:bg-pink-50 hover:border-pink-300 dark:border-pink-500/30 dark:hover:bg-pink-900/20 rounded-xl py-5"
-        >
-          <FileJson className="w-5 h-5 mr-3 text-pink-500" />
-          <span className="font-medium">Import Config from Clipboard</span>
-        </Button>
+        <div className="text-sm font-medium text-muted-foreground mb-2">
+          Config Import
+        </div>
+        <div className="flex gap-2 w-full">
+          <Button
+            onClick={handleConfigImport}
+            disabled={importing}
+            variant="outline"
+            className="flex-1 justify-start border-pink-200 hover:bg-pink-50 hover:border-pink-300 dark:border-pink-500/30 dark:hover:bg-pink-900/20 rounded-xl py-5"
+          >
+            <FileJson className="w-5 h-5 mr-3 text-pink-500" />
+            <span className="font-medium">From Clipboard</span>
+          </Button>
+          <Button
+            onClick={() => configFileInputRef.current?.click()}
+            disabled={importing}
+            variant="outline"
+            className="flex-1 justify-start border-pink-200 hover:bg-pink-50 hover:border-pink-300 dark:border-pink-500/30 dark:hover:bg-pink-900/20 rounded-xl py-5"
+          >
+            <FolderOpen className="w-5 h-5 mr-3 text-pink-500" />
+            <span className="font-medium">From File</span>
+          </Button>
+        </div>
 
-        <Button
-          onClick={handleLocalStorageImport}
-          disabled={importing}
-          variant="outline"
-          className="w-full justify-start border-pink-200 hover:bg-pink-50 hover:border-pink-300 dark:border-pink-500/30 dark:hover:bg-pink-900/20 rounded-xl py-5"
-        >
-          <Upload className="w-5 h-5 mr-3 text-pink-500" />
-          <span className="font-medium">
-            Import LocalStorage from Clipboard
-          </span>
-        </Button>
+        <div className="text-sm font-medium text-muted-foreground mb-2 mt-4">
+          LocalStorage Import
+        </div>
+        <div className="flex gap-2 w-full">
+          <Button
+            onClick={handleLocalStorageImport}
+            disabled={importing}
+            variant="outline"
+            className="flex-1 justify-start border-pink-200 hover:bg-pink-50 hover:border-pink-300 dark:border-pink-500/30 dark:hover:bg-pink-900/20 rounded-xl py-5"
+          >
+            <Upload className="w-5 h-5 mr-3 text-pink-500" />
+            <span className="font-medium">From Clipboard</span>
+          </Button>
+          <Button
+            onClick={() => localStorageFileInputRef.current?.click()}
+            disabled={importing}
+            variant="outline"
+            className="flex-1 justify-start border-pink-200 hover:bg-pink-50 hover:border-pink-300 dark:border-pink-500/30 dark:hover:bg-pink-900/20 rounded-xl py-5"
+          >
+            <FolderOpen className="w-5 h-5 mr-3 text-pink-500" />
+            <span className="font-medium">From File</span>
+          </Button>
+        </div>
       </div>
 
       {importStatus && (
