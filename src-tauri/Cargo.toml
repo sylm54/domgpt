@@ -76,3 +76,19 @@ reqwest = { version = "0.12", features = ["blocking"] }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }
+
+[profile.dev]
+opt-level = 1
+debug="line-tables-only"
+panic = "unwind"
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+debug="none"
