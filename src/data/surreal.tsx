@@ -12,12 +12,16 @@ import {
 } from "react";
 import { type LiveHandler, Surreal, type Uuid } from "surrealdb";
 
-export async function resetDatabase() {
+export function useResetDatabase() {
 	const surreal = useSurreal();
-	surreal.delete("info");
-	surreal.delete("profile");
-	surreal.delete("history");
-	surreal.delete("hypno");
+	return async () => {
+		await surreal.delete("info");
+		await surreal.delete("profile");
+		await surreal.delete("history");
+		await surreal.delete("hypno");
+		localStorage.clear();
+		window.location.reload();
+	};
 }
 
 export type UseLiveQueryProps<T extends Record<string, unknown> = Record<string, unknown>> = {

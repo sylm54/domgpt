@@ -17,6 +17,7 @@ import { appDataDir } from "@tauri-apps/api/path";
 import { generateAudio, type TtsProgressEvent, type AudioScript } from "../../lib/tts-rust";
 import { Play, Pause, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useProfileStore } from "@/data/profile";
 
 const steps = [
 	{
@@ -153,7 +154,6 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 	const [stage, setStage] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
 	const [generatedScript, setGeneratedScript] = useState<AudioScript | null>(null);
-
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);

@@ -8,8 +8,9 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import type { HypnoFile, HypnoPlan } from "@/types/user";
 import { useSaveHypnoFile } from "@/data/hypno";
-import { getHypnoPlannerPrompt } from "@/prompts/hypno";
+import { getHypnoPlannerPrompt, getHypnoWriterPrompt } from "@/prompts/hypno";
 import { useProfileStore } from "@/data/profile";
+import { useGetPromptHistoryData } from "@/data/history";
 
 interface SessionGeneratorProps {
 	model: Model;
@@ -19,6 +20,7 @@ interface SessionGeneratorProps {
 type GenerationPhase = "planning" | "writing" | "generating" | "complete" | "error";
 
 export function SessionGenerator({ model, onSessionGenerated }: SessionGeneratorProps) {
+	const getPromptHistoryData = useGetPromptHistoryData();
 	const [plannerAgent, setPlannerAgent] = useState<HypnoPlannerAgent | null>(null);
 	const [writerAgent, setWriterAgent] = useState<HypnoWriterAgent | null>(null);
 	const [phase, setPhase] = useState<GenerationPhase>("planning");
@@ -121,7 +123,10 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 			// 	},
 			// }),
 		];
-		plannerAgent.setSystemPrompt(getHypnoPlannerPrompt(profile));
+
+		const history = await getPromptHistoryData(5);
+
+		plannerAgent.setSystemPrompt(getHypnoPlannerPrompt(profile, history));
 
 		await plannerAgent.act(
 			userMessage("Create a hypno session plan based on the user profile and goal."),
@@ -139,73 +144,7 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 		for (let i = 0; i < planContent.length; i++) {
 			const section = planContent[i];
 
-			writerAgent.setSystemPrompt(`You are a Hypno Writer Agent.
-
-Your role is to:
-1. Receive a prompt of a hypno section from the Planner(the user message)
-2. Write a hypnotic scripts for this section to be used by a tts system using the below audio tags
-
-Key Requirements:
-- Adapt writing style: Hypnotic (NLP/Pacing), Direct (Affirmations), or Instructional
-- Write in a calm, soothing, and authoritative tone.
-- Include pacing statements to build rapport.
-- Repeat key suggestions for reinforcement.
-- Use vivid imagery and sensory language.
-- Ensure suggestions align with the user's hypno goals.
-- Use Hypno and conditioning techniques effectively.
-- Only write for the specified section.
-
-Tags to use:
-- <voice value="...">: Changes the TTS voice for all contained content.
-  - Available: male, male2, female, female2
-- <speed value="...">: Adjusts playback speed for contained content.
-- <pause value="..."/>: Inserts silence.
-- <sound value="..."/>: Plays a pre-built sound effect.
-    - Available: beep, pop, bubble_pop, camera_shutter, censor_beep, heart_beat, padlock, snap
-- <effect value="..." [preset="..."] [options="..."]>...</effect>: Applies audio effects to contained content.
-    - Echo: <effect value="echo" preset="light">echoed text</effect>
-    - Binaural: <effect value="binaural" preset="theta">binaural text</effect>
-    - Pan: <effect value="pan" preset="left">left channel</effect>
-- <overlay><part>...</part><part>...</part></overlay>: Overlays multiple audio tracks.
-- <loop value="...">...</loop>: Repeats contained audio.
-- <volume value="...">...</volume>: Adjusts volume.
-- <!-- comments -->: for internal notes
-Example usage:
-<voice value="female">
-    Welcome to your session.
-    <pause value="1" />
-    <effect value="binaural" preset="theta">
-        Relax deeply now.
-    </effect>
-    You feel calm and confident.
-    <speed value="0.9">
-        Let your mind slow down.
-    </speed>
-    <sound value="heart_beat"/>
-    <overlay>
-        <part>
-            <voice value="male">
-                You are safe and secure.
-            </voice>
-        </part>
-        <part>
-            <volume value="0.2">
-                <loop value="3">
-                    <sound value="bubble_pop"/>
-                </loop>
-            </volume>
-        </part>
-    </overlay>
-</voice>
-
-Session Plan:
-## ${section.name}
-${section.content}
-
-Previous Section ending:
-${script.substring(script.length - 100, script.length)}
-
-Include proper pacing with breaks. Make it effective. Use the tags extensively.`);
+			writerAgent.setSystemPrompt(getHypnoWriterPrompt(script, section));
 
 			const systemContent = writerAgent.context.system[0]?.content[0];
 			const systemText = systemContent?.type === "text" ? systemContent.text : "";

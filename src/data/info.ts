@@ -18,7 +18,7 @@ export function useGetInfos() {
 	return async (page: number = 0, pageSize: number = 20): Promise<UserInfo[]> => {
 		const offset = page * pageSize;
 		const infos = await surreal.query<UserInfo[]>(
-			"SELECT * FROM info ORDER BY created_at DESC LIMIT $pageSize OFFSET $offset",
+			"SELECT * FROM info ORDER BY created_at DESC LIMIT $pageSize START $offset",
 			{ pageSize, offset }
 		);
 		return infos;

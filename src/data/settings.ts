@@ -31,6 +31,11 @@ export const useSettingsStore = create<Settings>()(
 	)
 );
 
+export function useModel() {
+	const { settings } = useSettingsStore();
+	return getLLMModel(settings.llm_engine, settings.main_model);
+}
+
 export function getLLMModel(engine: LLMEngine, model: string): Model {
 	if (engine.type !== "openrouter") throw new Error(`Unsupported LLM engine type: ${engine.type}`);
 	const httpClient = new HTTPClient({

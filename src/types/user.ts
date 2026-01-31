@@ -32,6 +32,7 @@ export type ConditioningPlan = {
 	hypno: string;
 	challenges?: string;
 	user: string;
+	interview: string;
 };
 
 export type UserInfo = {
@@ -74,6 +75,7 @@ export type SessionType = "hypno" | "trigger_gym" | "challenge" | "habit" | "man
 export type Question =
 	| {
 			question: string;
+			answer: string;
 			type: "multiple_choice";
 			options: string[];
 	  }
@@ -81,10 +83,12 @@ export type Question =
 			question: string;
 			type: "rating";
 			scale: number;
+			answer: number;
 	  }
 	| {
 			question: string;
 			type: "open_text";
+			answer: string;
 	  };
 
 export type Reflection = {

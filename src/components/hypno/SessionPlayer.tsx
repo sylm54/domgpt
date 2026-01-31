@@ -2,22 +2,20 @@ import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir } from "@tauri-apps/api/path";
 import { Pause, Play, RotateCcw, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { z } from "zod";
-import { InterviewAgent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
-import { tool, userMessage } from "../../lib/models";
 import type { HypnoFile, Question, Reflection } from "../../types/user";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useLogHistoryData } from "@/data/history";
+import { Questionaire } from "../steering/Questionaire";
 
 interface SessionPlayerProps {
 	session: HypnoFile;
-	model: Model;
+	model?: Model; // Kept for backward compatibility but not used
 	onComplete?: () => void;
 }
 
-export function SessionPlayer({ session, model, onComplete }: SessionPlayerProps) {
+export function SessionPlayer({ session, model: _model, onComplete }: SessionPlayerProps) {
 	// Audio playback state
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const logHistoryData = useLogHistoryData();
@@ -33,10 +31,6 @@ export function SessionPlayer({ session, model, onComplete }: SessionPlayerProps
 
 	// Debrief state
 	const [showDebrief, setShowDebrief] = useState(false);
-	const [debriefQuestions, setDebriefQuestions] = useState<Question[]>([]);
-	const [debriefAnswers, setDebriefAnswers] = useState<Record<string, string | number>>({});
-	const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-	const [isGeneratingDebrief, setIsGeneratingDebrief] = useState(false);
 
 	// Load app data directory
 	useEffect(() => {
@@ -64,7 +58,6 @@ export function SessionPlayer({ session, model, onComplete }: SessionPlayerProps
 				setIsPlaying(false);
 				setCurrentTime(0);
 				setShowDebrief(true);
-				generateDebrief();
 			};
 
 			const handleError = (e: Event) => {
@@ -171,218 +164,34 @@ export function SessionPlayer({ session, model, onComplete }: SessionPlayerProps
 	// Calculate progress percentage
 	const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-	// Generate debrief questions
-	const generateDebrief = async () => {
-		setIsGeneratingDebrief(true);
-		const interviewAgent = new InterviewAgent(model);
-
-		const tools = [
-			tool({
-				name: "AskRate",
-				description: "Create a rating question (1-10 scale)",
-				schema: {
-					question: z.string(),
-					scale: z.number(),
-					key: z.string(),
-				},
-				call: async ({ question, scale }) => {
-					setDebriefQuestions((prev) => [
-						...prev,
-						{
-							question,
-							type: "rating",
-							scale,
-						},
-					]);
-					return "Rating question added";
-				},
-			}),
-			tool({
-				name: "AskMultipleChoice",
-				description: "Create a multiple choice question",
-				schema: {
-					question: z.string(),
-					options: z.array(z.string()),
-					key: z.string(),
-				},
-				call: async ({ question, options }) => {
-					setDebriefQuestions((prev) => [
-						...prev,
-						{
-							question,
-							type: "multiple_choice",
-							options,
-						},
-					]);
-					return "Multiple choice question added";
-				},
-			}),
-			tool({
-				name: "AskOpenText",
-				description: "Create an open text question",
-				schema: {
-					question: z.string(),
-					key: z.string(),
-				},
-				call: async ({ question }) => {
-					setDebriefQuestions((prev) => [
-						...prev,
-						{
-							question,
-							type: "open_text",
-						},
-					]);
-					return "Open text question added";
-				},
-			}),
-		];
-
-		interviewAgent.setSystemPrompt(`You are an Interview Agent for a conditioning training app.
-
-Generate 4-8 dynamic questions for post-session debriefing.
-
-Focus on:
-- Depth of trance (1-10)
-- Clarity of visualization
-- Emotional response
-- Trigger effectiveness
-- Overall session quality
-
-Use the tools to create a mix of rating, multiple choice, and open text questions.`);
-
-		await interviewAgent.act(
-			userMessage("Generate debrief questions for the hypno session that just completed."),
-			tools
-		);
-
-		setIsGeneratingDebrief(false);
+	// Handle debrief completion
+	const handleDebriefComplete = async (questions: Question[]) => {
+		const reflection: Reflection = {
+			questions,
+			created_at: new Date().toISOString(),
+		};
+		await logHistoryData({
+			type: "session",
+			debrief: reflection,
+			data: session.id,
+			session_type: "hypno",
+			time: new Date(),
+		});
+		onComplete?.();
 	};
-
-	// Handle debrief answer
-	const handleDebriefAnswer = (answer: string | number) => {
-		const currentQuestion = debriefQuestions[currentQuestionIndex];
-		const key = currentQuestion.question;
-		setDebriefAnswers((prev) => ({ ...prev, [key]: answer }));
-	};
-
-	// Move to next debrief question
-	const handleDebriefNext = async () => {
-		if (currentQuestionIndex < debriefQuestions.length - 1) {
-			setCurrentQuestionIndex(currentQuestionIndex + 1);
-		} else {
-			// Complete debrief
-			const reflectionQuestions = debriefQuestions.map((q) => {
-				const answer = debriefAnswers[q.question];
-				if (q.type === "multiple_choice") {
-					return { ...q, answer: answer as string };
-				}
-				if (q.type === "rating") {
-					return { ...q, answer: answer as number };
-				}
-				return { ...q, answer: answer as string };
-			});
-
-			const reflection: Reflection = {
-				questions: reflectionQuestions,
-				created_at: new Date().toISOString(),
-			};
-			await logHistoryData({
-				type: "session",
-				debrief: reflection,
-				data: session.id,
-				session_type: "hypno",
-				time: new Date(),
-			});
-			onComplete?.();
-		}
-	};
-
-	const currentQuestion = debriefQuestions[currentQuestionIndex];
-	const currentKey = currentQuestion?.question;
 
 	// Debrief view
 	if (showDebrief) {
-		if (isGeneratingDebrief) {
-			return (
-				<Card className="h-full">
-					<CardContent className="flex flex-col items-center justify-center h-full space-y-4">
-						<div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-						<p className="text-muted-foreground">Generating debrief questions...</p>
-					</CardContent>
-				</Card>
-			);
-		}
-
 		return (
-			<Card className="h-full">
-				<CardHeader>
-					<CardTitle>Session Debrief</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-6">
-					{currentQuestion && (
-						<>
-							<div className="text-sm text-muted-foreground mb-2">
-								Question {currentQuestionIndex + 1} of {debriefQuestions.length}
-							</div>
-							<div className="text-lg font-medium">{currentQuestion.question}</div>
-
-							{currentQuestion.type === "rating" && (
-								<div className="space-y-4">
-									<div className="flex justify-between text-sm text-muted-foreground">
-										<span>1</span>
-										<span>{currentQuestion.scale}</span>
-									</div>
-									<div className="grid grid-cols-10 gap-1">
-										{Array.from({ length: currentQuestion.scale }, (_, i) => i + 1).map((value) => (
-											<Button
-												key={value}
-												variant={debriefAnswers[currentKey] === value ? "default" : "outline"}
-												size="sm"
-												className="aspect-square"
-												onClick={() => handleDebriefAnswer(value)}
-											>
-												{value}
-											</Button>
-										))}
-									</div>
-								</div>
-							)}
-
-							{currentQuestion.type === "multiple_choice" && currentQuestion.options && (
-								<div className="space-y-2">
-									{currentQuestion.options.map((option) => (
-										<Button
-											key={option}
-											variant={debriefAnswers[currentKey] === option ? "default" : "outline"}
-											className="w-full justify-start"
-											onClick={() => handleDebriefAnswer(option)}
-										>
-											{option}
-										</Button>
-									))}
-								</div>
-							)}
-
-							{currentQuestion.type === "open_text" && (
-								<textarea
-									className="w-full min-h-[120px] p-3 rounded-md border border-input bg-background text-sm resize-none"
-									placeholder="Type your answer here..."
-									value={(debriefAnswers[currentKey] as string) || ""}
-									onChange={(e) => handleDebriefAnswer(e.target.value)}
-								/>
-							)}
-
-							<Button
-								onClick={handleDebriefNext}
-								disabled={debriefAnswers[currentKey] === undefined}
-								className="w-full"
-							>
-								{currentQuestionIndex === debriefQuestions.length - 1 ? "Complete" : "Next"}
-							</Button>
-						</>
-					)}
-				</CardContent>
-			</Card>
+			<Questionaire
+				referer={`a hypno session (${session.script || "session"})`}
+				onComplete={handleDebriefComplete}
+				title="Session Debrief"
+				generatingMessage="Generating debrief questions..."
+				completionTitle="Debrief Complete"
+				completionMessage="Thank you for your feedback."
+				showRestart={false}
+			/>
 		);
 	}
 

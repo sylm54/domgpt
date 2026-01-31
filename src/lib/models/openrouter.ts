@@ -287,7 +287,7 @@ export class OpenRouterModel extends Model {
 					maxTokens: options?.max_tokens,
 					temperature: options?.temperature,
 					reasoning: {
-						effort: options?.reasoning,
+						effort: "high",
 						summary: "detailed",
 					},
 				});

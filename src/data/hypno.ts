@@ -21,7 +21,6 @@ export function useSaveHypnoFile() {
 export function useLatestHypnoFile(): HypnoFile | undefined | null {
 	const surreal = useSurreal();
 	const [hypno, setHypno] = useState<HypnoFile | undefined | null>(undefined);
-	console.log("useLatestHypnoFile called", hypno);
 
 	useEffect(() => {
 		let cancelled = false;
