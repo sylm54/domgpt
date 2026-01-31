@@ -1,12 +1,6 @@
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { readTextFile } from "@tauri-apps/plugin-fs";
-import {
-	createContext,
-	type ReactNode,
-	useContext,
-	useEffect,
-	useState,
-} from "react";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import z from "zod";
 
 const CONFIG_NAME = "config.json";
@@ -48,9 +42,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 	if (error) {
 		return <div>Error loading configuration: {String(error)}</div>;
 	}
-	return (
-		<ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>
-	);
+	return <ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>;
 }
 
 export function useConfig() {

@@ -91,7 +91,7 @@ export function tool<
 			}
 				? RReturnType
 				: never;
-		},
+		}
 	) => any | Promise<any>;
 }): Tool {
 	return {
@@ -121,10 +121,7 @@ export abstract class Model {
 	 * @param options - Optional generation parameters
 	 * @returns The new chat message from the assistant
 	 */
-	abstract generate(
-		messages: ChatMessage[],
-		options?: GenerationOptions,
-	): Promise<ChatMessage>;
+	abstract generate(messages: ChatMessage[], options?: GenerationOptions): Promise<ChatMessage>;
 
 	/**
 	 * Perform agent work with tools
@@ -137,7 +134,7 @@ export abstract class Model {
 		messages: ChatMessage[],
 		tools: Tool[],
 		options?: GenerationOptions,
-		onProgress?: (intermediate: ChatMessage) => void,
+		onProgress?: (intermediate: ChatMessage) => void
 	): Promise<ChatMessage>;
 }
 
@@ -179,7 +176,7 @@ export function systemMessage(content: string): ChatMessage {
 
 export function wrapInteractiveSystem(
 	content: (inner: MessagePart[]) => MessagePart[],
-	msg: InteractiveSystemMessage,
+	msg: InteractiveSystemMessage
 ): ChatMessage {
 	return {
 		type: "interactive_system",

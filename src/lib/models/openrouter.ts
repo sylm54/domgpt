@@ -6,13 +6,7 @@ import type {
 	ToolResponseMessage,
 } from "@openrouter/sdk/models";
 import z from "zod";
-import {
-	type ChatMessage,
-	type GenerationOptions,
-	type MessagePart,
-	Model,
-	type Tool,
-} from ".";
+import { type ChatMessage, type GenerationOptions, type MessagePart, Model, type Tool } from ".";
 
 /*
 Example Usage:
@@ -78,10 +72,7 @@ export class OpenRouterModel extends Model {
 				// Map tool parts -> ChatMessageToolCall entries
 				const toolCalls: ChatMessageToolCall[] = toolParts.map((p) => {
 					// ensure id and arguments are strings
-					const id =
-						typeof (p as any).id === "string"
-							? (p as any).id
-							: String((p as any).id);
+					const id = typeof (p as any).id === "string" ? (p as any).id : String((p as any).id);
 					const args =
 						typeof (p as any).tool_input === "string"
 							? (p as any).tool_input
@@ -101,25 +92,20 @@ export class OpenRouterModel extends Model {
 				(assistantMsg as any).toolCalls = toolCalls;
 
 				// For any existing tool outputs, add corresponding tool role messages
-				const toolResponseMessages: ToolResponseMessage[] = toolParts.map(
-					(p) => {
-						const id =
-							typeof (p as any).id === "string"
-								? (p as any).id
-								: String((p as any).id);
-						const content =
-							typeof (p as any).tool_output === "string"
-								? (p as any).tool_output
-								: typeof (p as any).tool_output === "undefined"
-									? ""
-									: JSON.stringify((p as any).tool_output);
-						return {
-							role: "tool",
-							toolCallId: id,
-							content,
-						} as ToolResponseMessage;
-					},
-				);
+				const toolResponseMessages: ToolResponseMessage[] = toolParts.map((p) => {
+					const id = typeof (p as any).id === "string" ? (p as any).id : String((p as any).id);
+					const content =
+						typeof (p as any).tool_output === "string"
+							? (p as any).tool_output
+							: typeof (p as any).tool_output === "undefined"
+								? ""
+								: JSON.stringify((p as any).tool_output);
+					return {
+						role: "tool",
+						toolCallId: id,
+						content,
+					} as ToolResponseMessage;
+				});
 
 				return [assistantMsg, ...toolResponseMessages];
 			} else if (m.type === "user") {
@@ -162,10 +148,7 @@ export class OpenRouterModel extends Model {
 		});
 	}
 
-	async generate(
-		messages: ChatMessage[],
-		options?: GenerationOptions,
-	): Promise<ChatMessage> {
+	async generate(messages: ChatMessage[], options?: GenerationOptions): Promise<ChatMessage> {
 		console.group("generate");
 		try {
 			console.groupCollapsed("input");
@@ -180,7 +163,7 @@ export class OpenRouterModel extends Model {
 							}
 							return `${c.type}:\n${c.text}`;
 						})
-						.join("\n"),
+						.join("\n")
 				);
 			}
 			console.groupEnd();
@@ -195,23 +178,18 @@ export class OpenRouterModel extends Model {
 				maxTokens: options?.max_tokens,
 				temperature: options?.temperature,
 				reasoning: {
-					effort: options?.reasoning,
+					effort: "high", //options?.reasoning,
 					summary: "detailed",
 				},
 			});
 			const result: MessagePart[] = [];
-			if (
-				(response.choices[0].message.reasoning?.toString().trim().length ?? 0) >
-				0
-			) {
+			if ((response.choices[0].message.reasoning?.toString().trim().length ?? 0) > 0) {
 				result.push({
 					type: "thinking",
 					text: `${response.choices[0].message.reasoning}`,
 				});
 			}
-			if (
-				(response.choices[0].message.content?.toString().trim().length ?? 0) > 0
-			) {
+			if ((response.choices[0].message.content?.toString().trim().length ?? 0) > 0) {
 				result.push({
 					type: "text",
 					text: `${response.choices[0].message.content}`,
@@ -243,7 +221,7 @@ export class OpenRouterModel extends Model {
 		messages: ChatMessage[],
 		tools: Tool[],
 		options?: GenerationOptions,
-		onProgress?: (intermediate: ChatMessage) => void,
+		onProgress?: (intermediate: ChatMessage) => void
 	): Promise<ChatMessage> {
 		console.group("act");
 		try {
@@ -317,7 +295,7 @@ export class OpenRouterModel extends Model {
 				const response = res.choices[0];
 				// Push the model's message into the conversation stream so subsequent
 				// calls include it. Ensure response.message exists.
-				if (response && response.message) {
+				if (response?.message) {
 					input.push(response.message);
 				}
 
@@ -352,12 +330,11 @@ export class OpenRouterModel extends Model {
 				) {
 					for (const call of response.message.toolCalls) {
 						// Defensive normalization
-						const callId =
-							typeof call.id === "string" ? call.id : String(call.id);
+						const callId = typeof call.id === "string" ? call.id : String(call.id);
 						const fname = call.function?.name;
 						const fargsStr =
 							typeof call.function?.arguments === "string"
-								? call.function!.arguments
+								? call.function?.arguments
 								: JSON.stringify(call.function?.arguments ?? {});
 						console.groupCollapsed(`Tool Call: ${fname}`);
 						console.log("Input:", fargsStr);
@@ -435,26 +412,21 @@ export class OpenRouterModel extends Model {
 										// If parse fails, rethrow with context
 										throw new Error(
 											`Tool "${tooldefinition.name}" argument "${k}" parse error: ${String(
-												(err as Error)?.message ?? err,
-											)}`,
+												(err as Error)?.message ?? err
+											)}`
 										);
 									}
 									return [k, parsed];
-								}),
+								})
 							);
 
 							const callResult = await tooldefinition.call(parsedArgs);
 							const toolresStr =
-								typeof callResult === "string"
-									? callResult
-									: JSON.stringify(callResult);
+								typeof callResult === "string" ? callResult : JSON.stringify(callResult);
 
 							// Attach the tool output to the last result.content entry
 							const lastIdx2 = result.content.length - 1;
-							if (
-								lastIdx2 >= 0 &&
-								(result.content[lastIdx2] as any).type === "tool"
-							) {
+							if (lastIdx2 >= 0 && (result.content[lastIdx2] as any).type === "tool") {
 								(result.content[lastIdx2] as any).tool_output = toolresStr;
 							} else {
 								// If no prior tool entry exists, push one so UI can display output
@@ -495,10 +467,7 @@ export class OpenRouterModel extends Model {
 							// Attach the error to the last content tool entry if present,
 							// otherwise push a new tool entry containing the error info.
 							const lastIdx = result.content.length - 1;
-							if (
-								lastIdx >= 0 &&
-								(result.content[lastIdx] as any).type === "tool"
-							) {
+							if (lastIdx >= 0 && (result.content[lastIdx] as any).type === "tool") {
 								(result.content[lastIdx] as any).tool_output = errMsg;
 							} else {
 								result.content.push({
