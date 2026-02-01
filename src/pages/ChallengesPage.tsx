@@ -1,12 +1,15 @@
+import { ArrowLeft } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { getLLMModel, useSettingsStore } from "@/data/settings";
-import { cn } from "@/lib/utils";
 import type { Challenge } from "@/types/user";
 import { ChallengeGenerator, ChallengeList } from "../components/challenge";
 
 export function ChallengesPage() {
 	const { settings } = useSettingsStore();
+	const navigate = useNavigate();
 	const model = getLLMModel(settings.llm_engine, settings.main_model || "x-ai/grok-4.1-fast");
 	const [refreshKey, setRefreshKey] = useState(0);
 
@@ -17,6 +20,14 @@ export function ChallengesPage() {
 
 	return (
 		<div className="h-full overflow-auto">
+			{/* Back button */}
+			<div className="px-6 pt-4">
+				<Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+					<ArrowLeft className="h-4 w-4 mr-1" />
+					Back
+				</Button>
+			</div>
+
 			{/* Hero Section */}
 			<motion.div
 				initial={{ opacity: 0 }}
