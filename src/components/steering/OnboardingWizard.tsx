@@ -1,23 +1,38 @@
-import { useState } from "react";
-import { Button } from "../ui/button";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { appDataDir } from "@tauri-apps/api/path";
+import {
+	Brain,
+	Check,
+	Cpu,
+	Heart,
+	Key,
+	Loader2,
+	MessageCircle,
+	Pause,
+	Play,
+	Shield,
+	Sparkles,
+	Target,
+	Volume2,
+	VolumeX,
+	Zap,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useProfileStore } from "@/data/profile";
+import { getLLMModel, useSettingsStore } from "@/data/settings";
+import type { Model } from "@/lib/models";
+import { setOnboardingCompleted } from "@/pages/Dashboard";
+import type { CoachTrait } from "@/types/user";
+import { type AudioScript, generateAudio, type TtsProgressEvent } from "../../lib/tts-rust";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { CoachChat } from "./CoachChat";
-import { useNavigate } from "react-router-dom";
-import { getLLMModel, useSettingsStore } from "@/data/settings";
-import { setOnboardingCompleted } from "@/pages/Dashboard";
-import type { CoachTrait } from "@/types/user";
-import type { Model } from "@/lib/models";
-import { convertFileSrc } from "@tauri-apps/api/core";
-import { appDataDir } from "@tauri-apps/api/path";
-import { generateAudio, type TtsProgressEvent, type AudioScript } from "../../lib/tts-rust";
-import { Play, Pause, Volume2, VolumeX, Loader2 } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { useProfileStore } from "@/data/profile";
 
 const steps = [
 	{
@@ -91,54 +106,144 @@ export function OnboardingWizard() {
 
 	return (
 		<div className="flex flex-col h-full max-w-4xl mx-auto p-4">
-			{/* Progress Indicator */}
-			<div className="mb-8">
-				<div className="flex justify-between mb-2">
-					{steps.map((step, index) => (
-						<div
-							key={step.id}
-							className={`flex flex-col items-center ${
-								index <= currentStep ? "text-primary" : "text-muted-foreground"
-							}`}
-						>
-							<div
-								className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mb-1 ${
-									index <= currentStep
-										? "bg-primary text-primary-foreground"
-										: "bg-muted text-muted-foreground"
-								}`}
-							>
-								{index + 1}
-							</div>
-							<span className="text-xs hidden sm:block">{step.title}</span>
-						</div>
-					))}
-				</div>
-				<div className="w-full bg-muted h-2 rounded-full">
+			{/* Progress Indicator - Timeline Design */}
+			<div className="mb-10 px-4">
+				<div className="relative flex justify-between items-start">
+					{/* Connecting Line Background */}
 					<div
-						className="bg-primary h-2 rounded-full transition-all duration-300"
-						style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+						className="absolute top-4 left-0 right-0 h-0.5 bg-muted/50"
+						style={{ left: "2rem", right: "2rem" }}
 					/>
+
+					{/* Animated Progress Line */}
+					<div
+						className="absolute top-4 h-0.5 bg-gradient-to-r from-primary via-primary to-primary/50 transition-all duration-500 ease-out"
+						style={{
+							left: "2rem",
+							width: `calc(${(currentStep / (steps.length - 1)) * 100}% - 2rem)`,
+						}}
+					/>
+
+					{steps.map((step, index) => {
+						const isCompleted = index < currentStep;
+						const isActive = index === currentStep;
+						const isPending = index > currentStep;
+
+						return (
+							<div
+								key={step.id}
+								className="relative flex flex-col items-center z-10"
+								style={{ width: `${100 / steps.length}%` }}
+							>
+								{/* Step Circle */}
+								<div
+									className={`
+										relative w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold
+										transition-all duration-300 ease-out
+										${isActive ? "scale-110" : "scale-100"}
+										${
+											isCompleted
+												? "bg-primary text-primary-foreground"
+												: isActive
+													? "bg-primary text-primary-foreground shadow-lg shadow-primary/40"
+													: "bg-muted/80 text-muted-foreground border-2 border-muted-foreground/20"
+										}
+									`}
+								>
+									{/* Glow effect for active step */}
+									{isActive && (
+										<div className="absolute inset-0 rounded-full bg-primary/30 animate-pulse blur-md -z-10" />
+									)}
+
+									{isCompleted ? <Check className="w-4 h-4" /> : <span>{index + 1}</span>}
+								</div>
+
+								{/* Step Label */}
+								<div
+									className={`
+										mt-3 text-center transition-all duration-300
+										${isActive ? "opacity-100 translate-y-0" : "opacity-60 translate-y-0.5"}
+									`}
+								>
+									<span
+										className={`
+											text-xs font-medium block
+											${isActive ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"}
+										`}
+									>
+										{step.title}
+									</span>
+								</div>
+							</div>
+						);
+					})}
 				</div>
 			</div>
 
-			{/* Step Content */}
-			<Card className="flex-1 flex flex-col min-h-0">
-				<CardHeader>
-					<CardTitle>{steps[currentStep].title}</CardTitle>
-					<CardDescription>{steps[currentStep].description}</CardDescription>
+			{/* Step Content - Frosted Glass Card */}
+			<Card className="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-background/80 backdrop-blur-xl border-border/50 shadow-2xl">
+				{/* Decorative corner gradients */}
+				<div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
+				<div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-primary/10 via-transparent to-transparent pointer-events-none" />
+
+				{/* Subtle border glow */}
+				<div className="absolute inset-0 rounded-lg border border-primary/5 pointer-events-none" />
+
+				<CardHeader className="relative pb-4">
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+							<span className="text-primary font-bold">{currentStep + 1}</span>
+						</div>
+						<div>
+							<CardTitle className="text-xl">{steps[currentStep].title}</CardTitle>
+							<CardDescription className="text-sm mt-0.5">
+								{steps[currentStep].description}
+							</CardDescription>
+						</div>
+					</div>
 				</CardHeader>
-				<CardContent className="flex-1 min-h-0 overflow-hidden">{renderStepContent()}</CardContent>
+				<CardContent className="flex-1 min-h-0 overflow-hidden px-6 pb-6">
+					{renderStepContent()}
+				</CardContent>
 			</Card>
 
-			{/* Navigation - only show for non-chat steps */}
+			{/* Navigation - Polished Buttons */}
 			{currentStep < 4 && (
-				<div className="flex justify-between mt-6">
-					<Button variant="outline" onClick={handleBack} disabled={currentStep === 0}>
+				<div className="flex justify-between mt-6 gap-4">
+					<Button
+						variant="outline"
+						onClick={handleBack}
+						disabled={currentStep === 0}
+						className="min-w-[120px] border-border/50 hover:bg-muted/50 hover:border-border transition-all duration-200 disabled:opacity-30"
+					>
+						<svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<title>Back arrow</title>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M15 19l-7-7 7-7"
+							/>
+						</svg>
 						Back
 					</Button>
-					<Button onClick={handleNext} disabled={currentStep === 0 && !audioTestCompleted}>
+					<Button
+						onClick={handleNext}
+						disabled={currentStep === 0 && !audioTestCompleted}
+						className={`
+							min-w-[160px] transition-all duration-200
+							${
+								currentStep === 0 && !audioTestCompleted
+									? "opacity-50"
+									: "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 hover:shadow-primary/30"
+							}
+						`}
+					>
 						{currentStep === 0 ? (audioTestCompleted ? "Continue" : "Generate Test First") : "Next"}
+						<svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<title>Next arrow</title>
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+						</svg>
 					</Button>
 				</div>
 			)}
@@ -280,43 +385,52 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 	return (
 		<div className="space-y-6">
 			<div className="space-y-2">
-				<p className="text-sm text-muted-foreground">
+				<p className="text-sm text-muted-foreground leading-relaxed">
 					Before continuing, let's test the audio generation and playback system. Click the button
 					below to generate a test audio clip and ensure everything is working properly.
 				</p>
 			</div>
 
 			{!generatedScript && (
-				<div className="flex justify-center">
+				<div className="flex justify-center py-4">
 					<Button
 						onClick={handleGenerateAudio}
 						disabled={isGenerating}
 						size="lg"
-						className="w-full max-w-md"
+						className={`
+							w-full max-w-md h-14 text-base font-medium
+							${!isGenerating && "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40"}
+							transition-all duration-300
+						`}
 					>
 						{isGenerating ? (
 							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								<Loader2 className="mr-2 h-5 w-5 animate-spin" />
 								Generating...
 							</>
 						) : (
-							"Generate Test Audio"
+							<>
+								<Sparkles className="mr-2 h-5 w-5" />
+								Generate Test Audio
+							</>
 						)}
 					</Button>
 				</div>
 			)}
 
 			{isGenerating && (
-				<div className="space-y-2">
+				<div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border/50">
 					<div className="flex justify-between text-sm">
-						<span className="text-muted-foreground capitalize">{stage}</span>
-						<span>{Math.round(progress)}%</span>
+						<span className="text-muted-foreground capitalize font-medium">{stage}</span>
+						<span className="text-primary font-semibold">{Math.round(progress)}%</span>
 					</div>
-					<div className="w-full bg-secondary h-2 rounded-full">
+					<div className="w-full bg-secondary/50 h-3 rounded-full overflow-hidden">
 						<div
-							className="bg-primary h-2 rounded-full transition-all"
+							className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/70 transition-all duration-300 relative"
 							style={{ width: `${progress}%` }}
-						/>
+						>
+							<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+						</div>
 					</div>
 					{stage === "download" && (
 						<p className="text-xs text-muted-foreground text-center">
@@ -327,56 +441,128 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 			)}
 
 			{error && (
-				<div className="bg-destructive/10 text-destructive p-4 rounded-lg">
+				<div className="bg-destructive/10 text-destructive p-4 rounded-xl border border-destructive/20">
 					<p className="text-sm font-medium">Error</p>
-					<p className="text-xs mt-1">{error}</p>
+					<p className="text-xs mt-1 opacity-90">{error}</p>
 				</div>
 			)}
 
 			{generatedScript && (
-				<div className="space-y-4">
-					<div className="bg-muted p-4 rounded-lg">
-						<p className="text-sm font-medium mb-1">Audio Generated Successfully!</p>
-						<p className="text-xs text-muted-foreground">Now test the playback.</p>
+				<div className="space-y-5">
+					<div className="bg-gradient-to-r from-emerald-500/10 to-green-500/10 p-4 rounded-xl border border-emerald-500/20">
+						<div className="flex items-center gap-3">
+							<div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+								<Check className="w-5 h-5 text-emerald-500" />
+							</div>
+							<div>
+								<p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+									Audio Generated Successfully!
+								</p>
+								<p className="text-xs text-muted-foreground">Now test the playback below.</p>
+							</div>
+						</div>
 					</div>
 
-					<div className="space-y-4">
-						<div className="flex items-center justify-center gap-4">
-							<Button variant="ghost" size="icon" onClick={toggleMute} className="h-8 w-8">
-								{isMuted || volume === 0 ? (
-									<VolumeX className="h-4 w-4" />
-								) : (
-									<Volume2 className="h-4 w-4" />
-								)}
-							</Button>
-							<Button size="icon" onClick={togglePlay} className="h-12 w-12 rounded-full">
-								{isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-1" />}
-							</Button>
-							<input
-								type="range"
-								min={0}
-								max={100}
-								step={1}
-								value={volume * 100}
-								onChange={(e) => handleVolumeChange([parseFloat(e.target.value)])}
-								className="w-24 h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-							/>
+					{/* Audio Player Card */}
+					<div className="bg-gradient-to-br from-muted/50 to-muted/30 p-6 rounded-2xl border border-border/50 space-y-5">
+						{/* Waveform Visualization Placeholder */}
+						<div className="h-16 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl flex items-center justify-center overflow-hidden relative">
+							<div className="flex items-end gap-1 h-12">
+								{[...Array(40)].map((_, i) => {
+									const barId = `wave-bar-${i}-static`;
+									return (
+										<div
+											key={barId}
+											className={`w-1 rounded-full bg-gradient-to-t from-primary/40 to-primary/80 transition-all duration-150 ${isPlaying ? "animate-pulse" : ""}`}
+											style={{
+												height: `${20 + Math.sin(i * 0.5) * 15 + (isPlaying ? Math.random() * 20 : 0)}px`,
+												animationDelay: `${i * 50}ms`,
+											}}
+										/>
+									);
+								})}
+							</div>
+							{!isPlaying && (
+								<div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[1px]">
+									<span className="text-xs text-muted-foreground font-medium">Waveform</span>
+								</div>
+							)}
 						</div>
 
+						{/* Controls */}
+						<div className="flex items-center justify-center gap-6">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={toggleMute}
+								className="h-10 w-10 rounded-full hover:bg-muted"
+							>
+								{isMuted || volume === 0 ? (
+									<VolumeX className="h-5 w-5 text-muted-foreground" />
+								) : (
+									<Volume2 className="h-5 w-5 text-muted-foreground" />
+								)}
+							</Button>
+
+							{/* Play Button with Ring Animation */}
+							<div className="relative">
+								{isPlaying && (
+									<>
+										<div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+										<div className="absolute -inset-1 rounded-full bg-gradient-to-r from-primary/40 to-primary/20 animate-pulse blur-sm" />
+									</>
+								)}
+								<Button
+									size="icon"
+									onClick={togglePlay}
+									className={`
+										relative h-16 w-16 rounded-full 
+										bg-gradient-to-br from-primary to-primary/80 
+										hover:from-primary/90 hover:to-primary
+										shadow-lg shadow-primary/30 hover:shadow-primary/50
+										transition-all duration-200
+									`}
+								>
+									{isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
+								</Button>
+							</div>
+
+							<div className="w-10 flex justify-center">
+								<input
+									type="range"
+									min={0}
+									max={100}
+									step={1}
+									value={volume * 100}
+									onChange={(e) => handleVolumeChange([parseFloat(e.target.value)])}
+									className="w-20 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+								/>
+							</div>
+						</div>
+
+						{/* Progress Bar */}
 						<div className="space-y-2">
-							<div className="flex justify-between text-sm text-muted-foreground">
+							<div className="relative h-2 bg-muted rounded-full overflow-hidden">
+								<div
+									className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-primary/70 rounded-full transition-all duration-100"
+									style={{ width: `${progressPercent}%` }}
+								>
+									<div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-lg shadow-primary/50" />
+								</div>
+								<input
+									type="range"
+									min={0}
+									max={100}
+									step={0.1}
+									value={progressPercent}
+									onChange={(e) => handleSeek([parseFloat(e.target.value)])}
+									className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+								/>
+							</div>
+							<div className="flex justify-between text-xs text-muted-foreground font-medium">
 								<span>{formatTime(currentTime)}</span>
 								<span>{formatTime(duration)}</span>
 							</div>
-							<input
-								type="range"
-								min={0}
-								max={100}
-								step={0.1}
-								value={progressPercent}
-								onChange={(e) => handleSeek([parseFloat(e.target.value)])}
-								className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-							/>
 						</div>
 					</div>
 				</div>
@@ -390,9 +576,19 @@ function APIKeysStep() {
 
 	return (
 		<div className="space-y-6">
-			<div className="space-y-4">
+			{/* API Key Section */}
+			<div className="space-y-4 p-5 rounded-xl bg-muted/30 border border-border/50">
+				<div className="flex items-center gap-3 pb-2 border-b border-border/50">
+					<div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+						<Key className="w-4 h-4 text-primary" />
+					</div>
+					<h3 className="font-medium">API Key</h3>
+				</div>
+
 				<div className="space-y-2">
-					<Label htmlFor="openrouter-key">OpenRouter API Key</Label>
+					<Label htmlFor="openrouter-key" className="text-sm flex items-center gap-2">
+						<span className="text-muted-foreground">OpenRouter API Key</span>
+					</Label>
 					<Input
 						id="openrouter-key"
 						type="password"
@@ -406,19 +602,43 @@ function APIKeysStep() {
 								},
 							})
 						}
+						className="h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
 					/>
-					<p className="text-xs text-muted-foreground">
-						Required for cloud processing mode. Get your key from openrouter.ai
+					<p className="text-xs text-muted-foreground mt-2">
+						Required for cloud processing mode. Get your key from{" "}
+						<a
+							href="https://openrouter.ai"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-primary hover:underline"
+						>
+							openrouter.ai
+						</a>
 					</p>
+				</div>
+			</div>
+
+			{/* Model Selection Section */}
+			<div className="space-y-4 p-5 rounded-xl bg-muted/30 border border-border/50">
+				<div className="flex items-center gap-3 pb-2 border-b border-border/50">
+					<div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+						<Cpu className="w-4 h-4 text-primary" />
+					</div>
+					<h3 className="font-medium">Model Selection</h3>
 				</div>
 
 				<div className="space-y-2">
-					<Label htmlFor="model">Model</Label>
+					<Label htmlFor="model" className="text-sm text-muted-foreground">
+						Language Model
+					</Label>
 					<Select
 						value={settings.main_model || "x-ai/grok-4.1-fast"}
 						onValueChange={(value) => updateSettings({ main_model: value })}
 					>
-						<SelectTrigger id="model">
+						<SelectTrigger
+							id="model"
+							className="h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+						>
 							<SelectValue placeholder="Select model" />
 						</SelectTrigger>
 						<SelectContent>
@@ -438,51 +658,65 @@ function APIKeysStep() {
 function CoachTraitsStep() {
 	const { settings, updateSettings } = useSettingsStore();
 
-	const traitDefinitions: { value: CoachTrait; label: string; description: string }[] = [
+	const traitDefinitions: {
+		value: CoachTrait;
+		label: string;
+		description: string;
+		icon: React.ReactNode;
+	}[] = [
 		{
 			value: "soft",
 			label: "Soft",
 			description: "Gentle and non-confrontational",
+			icon: <Heart className="w-4 h-4" />,
 		},
 		{
 			value: "motivational",
 			label: "Motivational",
 			description: "Inspires and uplifts the user",
+			icon: <Sparkles className="w-4 h-4" />,
 		},
 		{
 			value: "encouraging",
 			label: "Encouraging",
 			description: "More friendly and supportive",
+			icon: <MessageCircle className="w-4 h-4" />,
 		},
 		{
 			value: "empathetic",
 			label: "Empathetic",
 			description: "Shows understanding of user's feelings",
+			icon: <Heart className="w-4 h-4" />,
 		},
 		{
 			value: "direct",
 			label: "Direct",
 			description: "Straightforward and to the point",
+			icon: <Target className="w-4 h-4" />,
 		},
 		{
 			value: "informative",
 			label: "Informative",
 			description: "Provides detailed explanations",
+			icon: <Brain className="w-4 h-4" />,
 		},
 		{
 			value: "intense",
 			label: "Intense",
 			description: "More forceful and goes farther",
+			icon: <Zap className="w-4 h-4" />,
 		},
 		{
 			value: "pushing",
 			label: "Pushing",
 			description: "Expands on your goals and takes them further",
+			icon: <Target className="w-4 h-4" />,
 		},
 		{
 			value: "assertive",
 			label: "Assertive",
 			description: "Takes initiative and guides your journey",
+			icon: <Shield className="w-4 h-4" />,
 		},
 	];
 
@@ -498,52 +732,95 @@ function CoachTraitsStep() {
 	return (
 		<div className="space-y-6">
 			<div className="space-y-2">
-				<p className="text-sm text-muted-foreground">
+				<p className="text-sm text-muted-foreground leading-relaxed">
 					Select the personality traits that best match how you'd like your Coach to interact with
 					you. You can choose multiple traits.
 				</p>
 			</div>
 
 			{selectedTraits.length > 0 && (
-				<div className="flex flex-wrap gap-2">
+				<div className="flex flex-wrap gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20">
 					{selectedTraits.map((trait) => (
-						<Badge key={trait} variant="default" className="text-sm">
+						<Badge
+							key={trait}
+							variant="default"
+							className="text-sm bg-primary/20 text-primary hover:bg-primary/30 border-0"
+						>
 							{traitDefinitions.find((t) => t.value === trait)?.label}
 						</Badge>
 					))}
 				</div>
 			)}
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-				{traitDefinitions.map(({ value, label, description }) => (
-					<div
-						key={value}
-						className={`flex items-start space-x-3 p-4 rounded-lg border transition-colors ${
-							selectedTraits.includes(value)
-								? "bg-primary/5 border-primary"
-								: "bg-background hover:bg-muted/50 border-border"
-						}`}
-					>
-						<Checkbox
-							id={`trait-${value}`}
-							checked={selectedTraits.includes(value)}
-							onCheckedChange={() => handleTraitToggle(value)}
-						/>
-						<div className="flex-1 space-y-1">
-							<Label
-								htmlFor={`trait-${value}`}
-								className="font-medium cursor-pointer flex items-center gap-2"
-							>
-								{label}
-							</Label>
-							<p className="text-xs text-muted-foreground">{description}</p>
-						</div>
-					</div>
-				))}
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+				{traitDefinitions.map(({ value, label, description, icon }) => {
+					const isSelected = selectedTraits.includes(value);
+
+					return (
+						<button
+							key={value}
+							type="button"
+							onClick={() => handleTraitToggle(value)}
+							className={`
+								relative group text-left p-4 rounded-xl border-2 transition-all duration-200
+								hover:-translate-y-0.5 hover:shadow-lg
+								${
+									isSelected
+										? "bg-primary/10 border-primary shadow-lg shadow-primary/10"
+										: "bg-background/50 border-border/50 hover:border-border hover:bg-muted/30"
+								}
+							`}
+						>
+							{/* Glow effect when selected */}
+							{isSelected && (
+								<div className="absolute inset-0 rounded-xl bg-primary/5 blur-xl -z-10" />
+							)}
+
+							<div className="flex items-start gap-3">
+								{/* Custom Checkbox */}
+								<div
+									className={`
+										mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0
+										transition-all duration-200
+										${
+											isSelected
+												? "bg-primary border-primary"
+												: "border-muted-foreground/30 group-hover:border-muted-foreground/50"
+										}
+									`}
+								>
+									{isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+								</div>
+
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2 mb-1">
+										<span
+											className={`
+												transition-colors duration-200
+												${isSelected ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}
+											`}
+										>
+											{icon}
+										</span>
+										<span
+											className={`
+												font-medium transition-colors duration-200
+												${isSelected ? "text-primary" : "text-foreground"}
+											`}
+										>
+											{label}
+										</span>
+									</div>
+									<p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+								</div>
+							</div>
+						</button>
+					);
+				})}
 			</div>
 
 			{selectedTraits.length === 0 && (
-				<p className="text-sm text-muted-foreground text-center py-4">
+				<p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-xl">
 					Select at least one trait to continue
 				</p>
 			)}
@@ -561,31 +838,108 @@ function DiscoveryStep({ model, onComplete }: { model: Model; onComplete: () => 
 
 function CompleteStep({ onComplete }: { onComplete: () => void }) {
 	return (
-		<div className="text-center space-y-6 py-8">
-			<div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-				<svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<title>Success checkmark</title>
-					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-				</svg>
+		<div className="text-center space-y-8 py-8">
+			{/* Animated Checkmark with Confetti-like effects */}
+			<div className="relative">
+				{/* Celebration particles */}
+				<div className="absolute inset-0 flex items-center justify-center">
+					{[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+						<div
+							key={`celebration-particle-${i}`}
+							className="absolute w-2 h-2 rounded-full bg-primary/60 animate-ping"
+							style={{
+								animationDelay: `${i * 150}ms`,
+								animationDuration: "2s",
+								transform: `rotate(${i * 45}deg) translateY(-40px)`,
+							}}
+						/>
+					))}
+				</div>
+
+				{/* Glow rings */}
+				<div className="absolute inset-0 flex items-center justify-center">
+					<div className="w-24 h-24 rounded-full bg-primary/10 animate-pulse" />
+				</div>
+				<div className="absolute inset-0 flex items-center justify-center">
+					<div
+						className="w-20 h-20 rounded-full bg-primary/20 animate-pulse"
+						style={{ animationDelay: "150ms" }}
+					/>
+				</div>
+
+				{/* Main checkmark circle */}
+				<div className="relative w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-primary/40">
+					<svg
+						className="w-10 h-10 text-primary-foreground animate-[bounce_1s_ease-in-out]"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<title>Success checkmark</title>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={3}
+							d="M5 13l4 4L19 7"
+							className="animate-[draw_0.5s_ease-out_forwards]"
+							style={{
+								strokeDasharray: 50,
+								strokeDashoffset: 0,
+							}}
+						/>
+					</svg>
+				</div>
 			</div>
 
-			<div>
-				<h3 className="text-lg font-medium">You're all set!</h3>
-				<p className="text-muted-foreground mt-2">
-					Your profile has been created and your Coach understands your goals.
+			<div className="space-y-2">
+				<h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+					You're all set!
+				</h3>
+				<p className="text-muted-foreground max-w-md mx-auto">
+					Your profile has been created and your Coach understands your goals. Time to begin your
+					transformation.
 				</p>
 			</div>
 
-			<div className="bg-muted p-4 rounded-lg text-left max-w-md mx-auto">
-				<h4 className="font-medium mb-2">Next steps:</h4>
-				<ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-					<li>Start your first hypno session</li>
-					<li>Chat with your Coach anytime to adjust your plan</li>
-					<li>Use Reflection to track your progress</li>
+			<div className="bg-gradient-to-br from-muted/50 to-muted/30 p-6 rounded-2xl text-left max-w-md mx-auto border border-border/50">
+				<h4 className="font-semibold mb-4 flex items-center gap-2">
+					<Sparkles className="w-4 h-4 text-primary" />
+					What's next
+				</h4>
+				<ul className="text-sm text-muted-foreground space-y-3">
+					<li className="flex items-start gap-3">
+						<div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+							<span className="text-xs font-bold text-primary">1</span>
+						</div>
+						<span>Start your first conditioning session</span>
+					</li>
+					<li className="flex items-start gap-3">
+						<div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+							<span className="text-xs font-bold text-primary">2</span>
+						</div>
+						<span>Chat with your Coach anytime to adjust your plan</span>
+					</li>
+					<li className="flex items-start gap-3">
+						<div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+							<span className="text-xs font-bold text-primary">3</span>
+						</div>
+						<span>Use Reflection to track your progress</span>
+					</li>
 				</ul>
 			</div>
 
-			<Button onClick={onComplete} className="w-full max-w-md">
+			<Button
+				onClick={onComplete}
+				size="lg"
+				className="
+					w-full max-w-md h-14 text-base font-semibold
+					bg-gradient-to-r from-primary via-primary to-primary/80
+					hover:from-primary/90 hover:via-primary/90 hover:to-primary
+					shadow-xl shadow-primary/30 hover:shadow-primary/50
+					transition-all duration-300 hover:scale-[1.02]
+				"
+			>
+				<Sparkles className="w-5 h-5 mr-2" />
 				Start Your Journey
 			</Button>
 		</div>

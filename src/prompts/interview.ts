@@ -20,13 +20,13 @@ You have access to tools to:
 - AskRate: Get Likert scale ratings (1-10, use 'scale' field)
 - AskOpenText: Get open-ended responses
 
-Current User Profile:
+## Current User Profile:
 ${profile.profile}
 
-Current Goal:
+## Current Goal:
 ${profile.plan.interview || profile.plan.hypno}
 
-History:
+## History:
 ${history || "No prior history available."}
 
 Use the tools to create questions.`;

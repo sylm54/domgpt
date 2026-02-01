@@ -12,7 +12,8 @@ export function useSaveHypnoFile() {
 				await surreal.upsert(hypno.id, hypno);
 				return;
 			}
-			await surreal.insert(`hypno`, hypno);
+			const hyp: HypnoFile[] = await surreal.insert<HypnoFile>(`hypno`, hypno);
+			return hyp[0];
 		},
 		[surreal]
 	);

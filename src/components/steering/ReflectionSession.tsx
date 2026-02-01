@@ -28,9 +28,9 @@ export function ReflectionSession({ model: _model }: ReflectionSessionProps) {
 			referer="reflection"
 			onComplete={handleComplete}
 			title="Reflection Session"
-			generatingMessage="Generating reflection questions..."
-			completionTitle="Reflection Complete"
-			completionMessage="Thank you for your reflection. Your Coach will review this data."
+			generatingMessage="Crafting personalized questions for your reflection..."
+			completionTitle="Reflection Complete!"
+			completionMessage="Thank you for taking the time to reflect. Your Coach will review this data and provide insights."
 			restartLabel="Start New Reflection"
 		/>
 	);

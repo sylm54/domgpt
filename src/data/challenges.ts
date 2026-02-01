@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { RecordId } from "surrealdb";
 import type { Challenge, HistoryItem, HistorySession } from "../types/user";
 import { useSurreal } from "./surreal";
-import { RecordId } from "surrealdb";
 
 export function useSaveChallenge() {
 	const surreal = useSurreal();
@@ -19,9 +19,13 @@ export function useSaveChallenge() {
 	);
 }
 
-export function useActiveChallenges(): Challenge[] | undefined {
+export function useActiveChallenges(): {
+	challenges: Challenge[] | undefined;
+	refetch: () => void;
+} {
 	const surreal = useSurreal();
 	const [challenges, setChallenges] = useState<Challenge[] | undefined>(undefined);
+	const [refetchCounter, setRefetchCounter] = useState(0);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -39,9 +43,13 @@ export function useActiveChallenges(): Challenge[] | undefined {
 		return () => {
 			cancelled = true;
 		};
-	}, [surreal]);
+	}, [surreal, refetchCounter]);
 
-	return challenges;
+	const refetch = useCallback(() => {
+		setRefetchCounter((c) => c + 1);
+	}, []);
+
+	return { challenges, refetch };
 }
 
 export function useCompleteChallenge() {

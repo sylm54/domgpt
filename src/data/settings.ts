@@ -7,6 +7,7 @@ import { OpenRouterModel } from "@/lib/models/openrouter";
 import type { AppSettings, LLMEngine } from "@/types/user";
 import type { Model } from "@/lib/models";
 import { createTauriFetcher } from "@/lib/http";
+import { useMemo } from "react";
 
 interface Settings {
 	settings: AppSettings;
@@ -33,7 +34,11 @@ export const useSettingsStore = create<Settings>()(
 
 export function useModel() {
 	const { settings } = useSettingsStore();
-	return getLLMModel(settings.llm_engine, settings.main_model);
+	const model = useMemo(
+		() => getLLMModel(settings.llm_engine, settings.main_model),
+		[settings.main_model, settings.llm_engine]
+	);
+	return model;
 }
 
 export function getLLMModel(engine: LLMEngine, model: string): Model {

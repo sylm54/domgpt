@@ -12,7 +12,7 @@ export function HypnoNewPage() {
 		navigate(`/hypno/play/${session.id}`);
 	};
 
-	const model = getLLMModel(settings.llm_engine, settings.main_model || "x-ai/grok-4.1-fast");
+	const model = getLLMModel(settings.llm_engine, settings.main_model);
 
 	return (
 		<div className="h-full p-4">
