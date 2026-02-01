@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { useSaveChallenge } from "@/data/challenges";
+import { useDeleteOpenChallenges, useSaveChallenge } from "@/data/challenges";
 import { useProfileStore } from "@/data/profile";
 import { cn } from "@/lib/utils";
 import { getChallengePlannerPrompt } from "@/prompts/challenge";
@@ -26,6 +26,7 @@ export function ChallengeGenerator({ model, onChallengesGenerated }: ChallengeGe
 	const [error, setError] = useState<string | null>(null);
 	const { profile } = useProfileStore();
 	const saveChallenge = useSaveChallenge();
+	const deleteOpenChallenges = useDeleteOpenChallenges();
 
 	useEffect(() => {
 		setAgent(new ChallengeAgent(model));
@@ -41,6 +42,9 @@ export function ChallengeGenerator({ model, onChallengesGenerated }: ChallengeGe
 		setPhase("generating");
 		setError(null);
 		setGeneratedChallenges([]);
+
+		// Delete all incomplete challenges before generating new ones
+		await deleteOpenChallenges();
 
 		try {
 			// Set the system prompt with user profile and goal

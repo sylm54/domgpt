@@ -247,6 +247,9 @@ function TimelineItem({
 								<span className="text-xs text-muted-foreground/50">•</span>
 								<span className="text-xs text-muted-foreground/70">{formatTime(item.time)}</span>
 							</div>
+							{isSession && item.extra && (
+								<p className="mt-2 text-xs text-foreground/90">{item.extra}</p>
+							)}
 						</div>
 						<motion.div
 							className={cn(

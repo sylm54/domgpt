@@ -1,27 +1,28 @@
-import { MarkdownTextPrimitive } from "@assistant-ui/react-markdown";
 import {
 	Activity,
 	BrainCircuit,
 	Calendar,
 	Flame,
 	MessageSquare,
+	Play,
+	RefreshCw,
 	Sparkles,
 	Target,
 	Trophy,
 	Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuickActionButton } from "@/components/dashboard/QuickActionButton";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { HistoryTimeline } from "@/components/history/HistoryTimeline";
-import { MarkdownText } from "@/components/markdown-text";
 import { useGetHistoryData } from "@/data/history";
 import { useLatestHypnoFile } from "@/data/hypno";
 import { useProfileStore } from "@/data/profile";
 import { useResetDatabase } from "@/data/surreal";
 import type { HistoryItem } from "@/types/user";
+import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 function isOnboardingCompleted(): boolean {
@@ -38,16 +39,26 @@ export function Dashboard() {
 	const navigate = useNavigate();
 	const getHistory = useGetHistoryData();
 	const [history, setHistory] = useState<HistoryItem[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loadingHistory, setLoadingHistory] = useState(true);
+	const [loadingHypno, setLoadingHypno] = useState(true);
 	const hypno = useLatestHypnoFile();
 
 	// Calculate statistics from history data
-	const stats = {
-		totalSessions: history.filter((item) => item.type === "session").length,
-		totalReflections: history.filter((item) => item.type === "reflection").length,
-		streak: calculateStreak(history),
-		lastActivity: history.length > 0 ? getDaysAgo(history[0].time) : "Never",
-	};
+	const stats = useMemo(
+		() => ({
+			totalSessions: loadingHistory ? 0 : history.filter((item) => item.type === "session").length,
+			totalReflections: loadingHistory
+				? 0
+				: history.filter((item) => item.type === "reflection").length,
+			streak: loadingHistory ? 0 : calculateStreak(history),
+			lastActivity: loadingHistory
+				? "Loading..."
+				: history.length > 0
+					? getDaysAgo(history[0].time)
+					: "Never",
+		}),
+		[history, loadingHistory]
+	);
 
 	useEffect(() => {
 		async function loadHistory() {
@@ -57,11 +68,17 @@ export function Dashboard() {
 			} catch (error) {
 				console.error("Failed to load history:", error);
 			} finally {
-				setLoading(false);
+				setLoadingHistory(false);
 			}
 		}
 		loadHistory();
 	}, [getHistory]);
+
+	useEffect(() => {
+		if (hypno !== undefined) {
+			setLoadingHypno(false);
+		}
+	}, [hypno]);
 
 	if (!isOnboardingCompleted()) {
 		return (
@@ -377,7 +394,7 @@ export function Dashboard() {
 					</div>
 				</div>
 
-				{/* Quick Actions with stagger animation */}
+				{/* Main Actions Grid */}
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -390,22 +407,87 @@ export function Dashboard() {
 						</div>
 						<div className="flex-1 h-px bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
 					</div>
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+					{/* Hypno Feature Card - Full Width */}
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.25 }}
+						className="mb-6"
+					>
+						<div className="relative group">
+							{/* Glow effect */}
+							<div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
+
+							<Card className="relative border-2 border-primary/20 overflow-hidden rounded-2xl bg-background/95 backdrop-blur-sm">
+								{/* Background decoration */}
+								<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+								<div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+								<CardContent className="p-6 md:p-8 relative">
+									<div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+										{/* Icon */}
+										<motion.div
+											animate={{ rotate: [0, 360] }}
+											transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+											className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 border border-primary/30 shadow-[0_0_30px_-5px_rgba(var(--primary),0.3)]"
+										>
+											<BrainCircuit className="h-10 w-10 text-primary" />
+										</motion.div>
+
+										{/* Content */}
+										<div className="flex-1">
+											<h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
+												Hypnosis Session
+											</h3>
+											<p className="text-muted-foreground max-w-lg">
+												{hypno
+													? "Continue your personalized hypnosis session or generate a new one tailored to your goals."
+													: "Generate a personalized hypnosis session tailored to your conditioning goals."}
+											</p>
+										</div>
+
+										{/* Action Buttons */}
+										<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+											{loadingHypno ? (
+												<motion.div
+													animate={{ rotate: 360 }}
+													transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+													className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full"
+												/>
+											) : hypno ? (
+												<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+													<Button
+														size="lg"
+														onClick={() => navigate(`/hypno/play/${hypno.id.id}`)}
+														className="relative overflow-hidden bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold px-6 shadow-lg shadow-primary/25"
+													>
+														<Play className="h-5 w-5 mr-2" />
+														Play
+													</Button>
+												</motion.div>
+											) : null}
+											<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+												<Button
+													size="lg"
+													variant="outline"
+													onClick={() => navigate("/hypno/new")}
+													className="border-primary/30 hover:border-primary/60 hover:bg-primary/5 font-semibold px-6"
+												>
+													<RefreshCw className="h-5 w-5 mr-2" />
+													{hypno ? "Regenerate" : "Generate New"}
+												</Button>
+											</motion.div>
+										</div>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					</motion.div>
+
+					{/* Other Quick Actions */}
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 						{[
-							hypno && {
-								onClick: () => navigate(`/hypno/play/${hypno.id.id}`),
-								title: "Continue Last Session",
-								description: "Resume where you left off in your last hypnosis session",
-								variant: "default" as const,
-								icon: <BrainCircuit className="h-6 w-6" />,
-							},
-							{
-								onClick: () => navigate("/hypno/new"),
-								title: "New Hypnosis Session",
-								description: "Generate a personalized hypnosis session for your goals",
-								variant: "outline" as const,
-								icon: <Zap className="h-6 w-6" />,
-							},
 							{
 								onClick: () => navigate("/coach"),
 								title: "Chat with Coach",
@@ -439,24 +521,22 @@ export function Dashboard() {
 								variant: "destructive" as const,
 								icon: <Trophy className="h-6 w-6" />,
 							},
-						]
-							.filter(Boolean)
-							.map((action, index) => (
-								<motion.div
-									key={action!.title}
-									initial={{ opacity: 0, y: 20 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{ delay: 0.2 + index * 0.05 }}
-								>
-									<QuickActionButton
-										onClick={action!.onClick}
-										title={action!.title}
-										description={action!.description}
-										variant={action!.variant}
-										icon={action!.icon}
-									/>
-								</motion.div>
-							))}
+						].map((action, index) => (
+							<motion.div
+								key={action.title}
+								initial={{ opacity: 0, y: 20 }}
+								animate={{ opacity: 1, y: 0 }}
+								transition={{ delay: 0.3 + index * 0.05 }}
+							>
+								<QuickActionButton
+									onClick={action.onClick}
+									title={action.title}
+									description={action.description}
+									variant={action.variant}
+									icon={action.icon}
+								/>
+							</motion.div>
+						))}
 					</div>
 				</motion.div>
 
@@ -532,7 +612,7 @@ export function Dashboard() {
 						<div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-accent/10 to-transparent rounded-full translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
 						<CardContent className="p-6 relative">
-							{loading ? (
+							{loadingHistory ? (
 								<div className="flex flex-col items-center justify-center py-12">
 									<motion.div
 										animate={{ rotate: 360 }}
@@ -540,6 +620,14 @@ export function Dashboard() {
 										className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full mb-4"
 									/>
 									<p className="text-muted-foreground">Loading your history...</p>
+								</div>
+							) : history.length === 0 ? (
+								<div className="flex flex-col items-center justify-center py-12">
+									<Activity className="h-12 w-12 text-muted-foreground mb-4" />
+									<p className="text-muted-foreground font-medium">No history yet</p>
+									<p className="text-sm text-muted-foreground mt-2">
+										Start your first session to see your progress here
+									</p>
 								</div>
 							) : (
 								<HistoryTimeline history={history} />

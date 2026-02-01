@@ -13,6 +13,7 @@ export interface HistorySession extends HistoryData {
 	type: "session";
 	session_type: SessionType;
 	data: RecordId;
+	extra?: string;
 	debrief?: Reflection;
 }
 

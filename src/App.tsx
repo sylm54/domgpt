@@ -148,6 +148,7 @@ export const router = createMemoryRouter(
 );
 const queryClient = new QueryClient();
 function App() {
+	console.log("Render");
 	return (
 		<main className="h-screen flex flex-col overflow-hidden">
 			<div className="flex-1 min-h-0 overflow-hidden">
@@ -156,12 +157,16 @@ function App() {
 						endpoint="indxdb://demo"
 						params={{ namespace: "app", database: "default" }}
 					>
-						<RouterProvider router={router} />
+						<Router />
 					</SurrealProvider>
 				</QueryClientProvider>
 			</div>
 		</main>
 	);
+}
+
+function Router() {
+	return <RouterProvider router={router} />;
 }
 
 export default App;

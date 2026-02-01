@@ -3,6 +3,13 @@ import { RecordId } from "surrealdb";
 import type { Challenge, HistoryItem, HistorySession } from "../types/user";
 import { useSurreal } from "./surreal";
 
+export function useDeleteOpenChallenges() {
+	const surreal = useSurreal();
+	return useCallback(async () => {
+		await surreal.query("DELETE FROM challenges WHERE completed = false");
+	}, [surreal]);
+}
+
 export function useSaveChallenge() {
 	const surreal = useSurreal();
 
@@ -72,6 +79,7 @@ export function useCompleteChallenge() {
 				session_type: "challenge",
 				data: challenge.id || new RecordId("challenges", crypto.randomUUID()),
 				debrief: undefined,
+				extra: challenge.description,
 				time: new Date(),
 			};
 
