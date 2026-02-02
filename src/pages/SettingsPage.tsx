@@ -5,6 +5,7 @@ import { AISettings } from "@/components/settings/AISettings";
 import { AudioSettings } from "@/components/settings/AudioSettings";
 import { CoachSettings } from "@/components/settings/CoachSettings";
 import { DataManagement } from "@/components/settings/DataManagement";
+import { HypnoStyleSettings } from "@/components/settings/HypnoStyleSettings";
 import { ProfileView } from "@/components/settings/ProfileView";
 import { SettingsSection } from "@/components/settings/SettingsSection";
 import { Button } from "@/components/ui/button";
@@ -18,14 +19,14 @@ export function SettingsPage() {
 			animate={{ opacity: 1 }}
 			transition={{ duration: 0.4 }}
 			className="h-full overflow-auto scroll-smooth"
-    >
-      {/* Back button */}
-				<div className="mb-4">
-					<Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-						<ArrowLeft className="h-4 w-4 mr-1" />
-						Back
-					</Button>
-				</div>
+		>
+			{/* Back button */}
+			<div className="mb-4">
+				<Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+					<ArrowLeft className="h-4 w-4 mr-1" />
+					Back
+				</Button>
+			</div>
 			<div className="p-4 md:p-6 space-y-8 max-w-4xl mx-auto">
 				<motion.div
 					initial={{ opacity: 0, y: -20 }}
@@ -88,6 +89,13 @@ export function SettingsPage() {
 						description="Choose how your Coach interacts with you"
 					>
 						<CoachSettings />
+					</SettingsSection>
+
+					<SettingsSection
+						title="Hypno Style"
+						description="Configure your hypnosis session preferences"
+					>
+						<HypnoStyleSettings />
 					</SettingsSection>
 
 					<SettingsSection title="Profile" description="View your profile and conditioning plan">

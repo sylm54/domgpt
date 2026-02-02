@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { HypnoStyleSettings } from "@/components/settings/HypnoStyleSettings";
 import { useProfileStore } from "@/data/profile";
 import { getLLMModel, useSettingsStore } from "@/data/settings";
 import type { Model } from "@/lib/models";
@@ -49,6 +50,11 @@ const steps = [
 		id: "coach-traits",
 		title: "Coach Personality",
 		description: "Choose how your Coach should interact with you",
+	},
+	{
+		id: "hypno-style",
+		title: "Hypno Style",
+		description: "Configure your hypnosis session preferences",
 	},
 	{
 		id: "discovery",
@@ -93,6 +99,8 @@ export function OnboardingWizard() {
 				return <APIKeysStep />;
 			case "coach-traits":
 				return <CoachTraitsStep />;
+			case "hypno-style":
+				return <HypnoStyleSettings isOnboarding={true} />;
 			case "discovery": {
 				const model = getLLMModel(settings.llm_engine, settings.main_model || "x-ai/grok-4.1-fast");
 				return <DiscoveryStep model={model} onComplete={handleNext} />;

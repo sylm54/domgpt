@@ -4,6 +4,8 @@ import { z } from "zod";
 import { useGetPromptHistoryData } from "@/data/history";
 import { useSaveHypnoFile } from "@/data/hypno";
 import { useProfileStore } from "@/data/profile";
+import { useSettingsStore } from "@/data/settings";
+import { setMemory } from "@/lib/utils";
 import { getHypnoPlannerPrompt, getHypnoWriterPrompt } from "@/prompts/hypno";
 import type { HypnoFile, HypnoPlan } from "@/types/user";
 import { HypnoPlannerAgent, HypnoWriterAgent } from "../../lib/agent";
@@ -233,6 +235,7 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 	const [isPlanning, setIsPlanning] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const { profile } = useProfileStore();
+	const { settings } = useSettingsStore();
 	const saveHypnoFile = useSaveHypnoFile();
 
 	useEffect(() => {
@@ -308,6 +311,18 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 					return `Section "${section}" created`;
 				},
 			}),
+			tool({
+				name: "UpdateMemory",
+				description:
+					"Save important insights about the user to memory for future sessions. Use this to record what worked well, user responsiveness patterns, effective triggers/anchors/metaphors, and adjustments needed for future sessions.",
+				schema: {
+					content: z.string(),
+				},
+				call: async ({ content }) => {
+					setMemory(content);
+					return "Memory updated successfully";
+				},
+			}),
 		];
 
 		const history = await getPromptHistoryData(5);
@@ -330,7 +345,7 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 		for (let i = 0; i < planContent.length; i++) {
 			const section = planContent[i];
 
-			writerAgent.setSystemPrompt(getHypnoWriterPrompt(script, section));
+			writerAgent.setSystemPrompt(getHypnoWriterPrompt(script, section, settings.hypno_style));
 
 			const systemContent = writerAgent.context.system[0]?.content[0];
 			const systemText = systemContent?.type === "text" ? systemContent.text : "";

@@ -32,8 +32,8 @@ export type UserProfile = {
 export type ConditioningPlan = {
 	hypno: string;
 	challenges: string;
-  user: string;
-  coach: string;
+	user: string;
+	coach: string;
 	interview: string;
 };
 
@@ -65,11 +65,27 @@ export type CoachTrait =
 	| "pushing" // Expands on the users goals and takes them further
 	| "assertive"; // Act without the users knowledge / doesnt tell the user what exactly it is doing
 
+export type HypnoStyle = "authoritarian" | "permissive" | "balanced";
+
+export type InductionType = "progressive_relaxation" | "visualization" | "breathing";
+
+export type SensoryType = "visual" | "kinesthetic" | "mixed";
+
+export type SuggestionType = "direct" | "indirect" | "permissive";
+
+export type HypnoStyleConfig = {
+	style: HypnoStyle;
+	induction_types: InductionType[];
+	sensory: SensoryType;
+	suggestion: SuggestionType;
+};
+
 export type AppSettings = {
 	llm_engine?: LLMEngine;
 	main_model?: string;
 	tts_engine?: TTSEngine;
 	coach_traits?: CoachTrait[];
+	hypno_style?: HypnoStyleConfig;
 };
 
 export type SessionType = "hypno" | "trigger_gym" | "challenge" | "habit" | "mantra" | "subliminal";
