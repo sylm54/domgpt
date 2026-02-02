@@ -85,94 +85,28 @@ export function Dashboard() {
 				animate={{ opacity: 1, y: 0 }}
 				className="h-full flex items-center justify-center p-4 relative overflow-hidden"
 			>
-				{/* Background mesh pattern */}
-				<div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
-				<div className="absolute inset-0 opacity-30">
-					<div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-					<div
-						className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl animate-pulse"
-						style={{ animationDelay: "1s" }}
-					/>
-				</div>
-
-				{/* Floating geometric elements */}
-				<motion.div
-					animate={{
-						y: [0, -20, 0],
-						rotate: [0, 5, 0],
-					}}
-					transition={{
-						duration: 6,
-						repeat: Infinity,
-						ease: "easeInOut",
-					}}
-					className="absolute top-20 right-20 w-24 h-24 border border-primary/20 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent backdrop-blur-sm"
-				/>
-				<motion.div
-					animate={{
-						y: [0, 15, 0],
-						rotate: [0, -5, 0],
-					}}
-					transition={{
-						duration: 5,
-						repeat: Infinity,
-						ease: "easeInOut",
-						delay: 0.5,
-					}}
-					className="absolute bottom-32 left-16 w-16 h-16 border border-accent/20 rounded-xl bg-gradient-to-br from-accent/10 to-transparent backdrop-blur-sm"
-				/>
-
-				{/* Glowing Welcome Card */}
 				<motion.div
 					initial={{ scale: 0.9, opacity: 0 }}
 					animate={{ scale: 1, opacity: 1 }}
 					transition={{ type: "spring", stiffness: 100 }}
-					className="relative"
 				>
-					{/* Glow effect */}
-					<div className="absolute -inset-1 bg-gradient-to-r from-primary via-accent to-primary rounded-3xl blur-lg opacity-50 animate-pulse" />
-
-					<Card className="relative max-w-lg w-full border-2 border-primary/30 shadow-2xl bg-background/95 backdrop-blur-xl rounded-3xl overflow-hidden">
-						{/* Inner decorative elements */}
-						<div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-						<div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-accent/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
-
-						{/* Animated corner accents */}
-						<motion.div
-							animate={{ opacity: [0.3, 0.6, 0.3] }}
-							transition={{ duration: 2, repeat: Infinity }}
-							className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-primary/40 rounded-tl-lg"
-						/>
-						<motion.div
-							animate={{ opacity: [0.3, 0.6, 0.3] }}
-							transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-							className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-accent/40 rounded-br-lg"
-						/>
-
-						<CardHeader className="text-center pb-4 pt-8 relative z-10">
+					<Card className="max-w-lg w-full border border-primary/20 bg-background rounded-3xl overflow-hidden">
+						<CardHeader className="text-center pb-4 pt-8">
 							<motion.div
 								initial={{ scale: 0, rotate: -180 }}
 								animate={{ scale: 1, rotate: 0 }}
 								transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-								className="mx-auto mb-6 w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/30 via-accent/20 to-primary/30 flex items-center justify-center shadow-lg shadow-primary/20 border border-primary/20"
+								className="mx-auto mb-6 w-24 h-24 rounded-2xl bg-primary/20 flex items-center justify-center"
 							>
-								<motion.div
-									animate={{ rotate: [0, 360] }}
-									transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-								>
-									<Sparkles className="h-12 w-12 text-primary" />
-								</motion.div>
+								<Sparkles className="h-12 w-12 text-primary" />
 							</motion.div>
-							<CardTitle className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary via-foreground to-accent bg-clip-text text-transparent leading-tight">
+							<CardTitle className="text-3xl md:text-4xl font-bold text-primary leading-tight">
 								Welcome to
 								<br />
 								Conditioning Trainer
 							</CardTitle>
-							<p className="text-lg text-muted-foreground mt-4 max-w-sm mx-auto">
-								Complete onboarding to begin your personalized conditioning journey
-							</p>
 						</CardHeader>
-						<CardContent className="pb-8 px-8 relative z-10">
+						<CardContent className="pb-8 px-8">
 							<motion.div
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
@@ -183,18 +117,11 @@ export function Dashboard() {
 									onClick={() => navigate("/onboarding")}
 									whileHover={{ scale: 1.02 }}
 									whileTap={{ scale: 0.98 }}
-									className="relative w-full h-16 rounded-2xl bg-gradient-to-r from-primary via-primary to-accent text-primary-foreground font-bold text-xl shadow-lg shadow-primary/30 overflow-hidden group"
+									className="w-full h-16 rounded-2xl bg-primary text-primary-foreground font-bold text-xl"
 								>
-									{/* Button glow on hover */}
-									<div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-									<span className="relative z-10 flex items-center justify-center gap-2">
+									<span className="flex items-center justify-center gap-2">
 										Start Your Journey
-										<motion.span
-											animate={{ x: [0, 4, 0] }}
-											transition={{ duration: 1.5, repeat: Infinity }}
-										>
-											<Zap className="h-5 w-5" />
-										</motion.span>
+										<Zap className="h-5 w-5" />
 									</span>
 								</motion.button>
 							</motion.div>
@@ -232,65 +159,13 @@ export function Dashboard() {
 			className="h-full overflow-auto scroll-smooth"
 		>
 			<div className="p-4 md:p-6 space-y-8 max-w-7xl mx-auto">
-				{/* Hero Section with dramatic gradient background */}
+				{/* Hero Section */}
 				<motion.div
 					initial={{ opacity: 0, y: -20 }}
 					animate={{ opacity: 1, y: 0 }}
-					className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/15 via-background to-accent/10 p-8 md:p-12 border border-primary/20 min-h-[200px]"
+					className="rounded-3xl bg-primary/5 p-8 md:p-12 border border-primary/20 min-h-[200px]"
 				>
-					{/* Mesh-like pattern background */}
-					<div className="absolute inset-0 opacity-30">
-						<div
-							className="absolute inset-0"
-							style={{
-								backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--primary) / 0.3) 0%, transparent 50%),
-											  radial-gradient(circle at 75% 75%, hsl(var(--accent) / 0.3) 0%, transparent 50%),
-											  radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.1) 0%, transparent 70%)`,
-							}}
-						/>
-					</div>
-
-					{/* Decorative gradient orbs */}
-					<div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-primary/30 via-primary/10 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-					<div className="absolute bottom-0 left-1/4 w-64 h-64 bg-gradient-to-tr from-accent/25 via-accent/10 to-transparent rounded-full blur-3xl translate-y-1/2 pointer-events-none" />
-					<div className="absolute top-1/2 right-1/4 w-48 h-48 bg-gradient-to-l from-primary/20 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-					{/* Geometric decoration on the right */}
-					<div className="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:block">
-						<motion.div
-							animate={{
-								y: [0, -15, 0],
-								rotate: [0, 5, 0],
-							}}
-							transition={{
-								duration: 6,
-								repeat: Infinity,
-								ease: "easeInOut",
-							}}
-							className="relative"
-						>
-							<div className="w-32 h-32 border-2 border-primary/20 rounded-3xl bg-gradient-to-br from-primary/10 to-accent/5 backdrop-blur-sm" />
-							<div className="absolute -top-4 -right-4 w-16 h-16 border border-accent/30 rounded-2xl bg-gradient-to-br from-accent/10 to-transparent" />
-							<div className="absolute -bottom-6 -left-6 w-20 h-20 border border-primary/20 rounded-2xl bg-gradient-to-tr from-primary/10 to-transparent" />
-						</motion.div>
-					</div>
-
-					{/* Floating animated element */}
-					<motion.div
-						animate={{
-							y: [0, -10, 0],
-							x: [0, 5, 0],
-						}}
-						transition={{
-							duration: 4,
-							repeat: Infinity,
-							ease: "easeInOut",
-						}}
-						className="absolute top-6 right-1/3 w-8 h-8 bg-gradient-to-br from-primary/40 to-accent/40 rounded-lg blur-sm"
-					/>
-
-					{/* Content - Asymmetric layout offset to the left */}
-					<div className="relative z-10 max-w-xl">
+					<div className="max-w-xl">
 						<motion.div
 							initial={{ opacity: 0, x: -20 }}
 							animate={{ opacity: 1, x: 0 }}
@@ -301,12 +176,9 @@ export function Dashboard() {
 								Your Dashboard
 							</span>
 						</motion.div>
-						<h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent leading-tight">
+						<h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground leading-tight">
 							Welcome Back
 						</h1>
-						<p className="text-muted-foreground text-lg md:text-xl max-w-md">
-							Continue your conditioning journey with progress and insights
-						</p>
 					</div>
 				</motion.div>
 
@@ -317,13 +189,9 @@ export function Dashboard() {
 					transition={{ delay: 0.1 }}
 					className="space-y-4"
 				>
-					{/* Section title with decorative line */}
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-2">
-							<Activity className="h-5 w-5 text-primary" />
-							<h2 className="text-xl font-bold">Your Progress</h2>
-						</div>
-						<div className="flex-1 h-px bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
+					<div className="flex items-center gap-2">
+						<Activity className="h-5 w-5 text-primary" />
+						<h2 className="text-xl font-bold">Your Progress</h2>
 					</div>
 
 					<div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -380,30 +248,15 @@ export function Dashboard() {
 					</div>
 				</motion.div>
 
-				{/* Decorative divider before Quick Actions */}
-				<div className="relative py-2">
-					<div className="absolute inset-0 flex items-center">
-						<div className="w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-					</div>
-					<div className="relative flex justify-center">
-						<div className="bg-background px-4">
-							<div className="w-2 h-2 rounded-full bg-primary/30" />
-						</div>
-					</div>
-				</div>
-
 				{/* Main Actions Grid */}
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.2 }}
 				>
-					<div className="flex items-center gap-4 mb-6">
-						<div className="flex items-center gap-2">
-							<Sparkles className="h-5 w-5 text-primary" />
-							<h2 className="text-xl font-bold">Quick Actions</h2>
-						</div>
-						<div className="flex-1 h-px bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
+					<div className="flex items-center gap-2 mb-6">
+						<Sparkles className="h-5 w-5 text-primary" />
+						<h2 className="text-xl font-bold">Quick Actions</h2>
 					</div>
 
 					{/* Hypno Feature Card - Full Width */}
@@ -413,74 +266,56 @@ export function Dashboard() {
 						transition={{ delay: 0.25 }}
 						className="mb-6"
 					>
-						<div className="relative group">
-							{/* Glow effect */}
-							<div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
+						<Card className="border border-primary/20 rounded-2xl bg-background">
+							<CardContent className="p-6 md:p-8">
+								<div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+									<div className="p-4 rounded-2xl bg-primary/10">
+										<BrainCircuit className="h-10 w-10 text-primary" />
+									</div>
 
-							<Card className="relative border-2 border-primary/20 overflow-hidden rounded-2xl bg-background/95 backdrop-blur-sm">
-								{/* Background decoration */}
-								<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-								<div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+									<div className="flex-1">
+										<h3 className="text-2xl font-bold mb-2 text-foreground">Hypnosis Session</h3>
+										<p className="text-muted-foreground max-w-lg">
+											{hypno
+												? "Continue your session or generate a new one."
+												: "Generate a personalized hypnosis session."}
+										</p>
+									</div>
 
-								<CardContent className="p-6 md:p-8 relative">
-									<div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-										{/* Icon */}
-										<motion.div
-											animate={{ rotate: [0, 360] }}
-											transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-											className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 border border-primary/30 shadow-[0_0_30px_-5px_rgba(var(--primary),0.3)]"
-										>
-											<BrainCircuit className="h-10 w-10 text-primary" />
-										</motion.div>
-
-										{/* Content */}
-										<div className="flex-1">
-											<h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-foreground via-foreground to-foreground/60 bg-clip-text text-transparent">
-												Hypnosis Session
-											</h3>
-											<p className="text-muted-foreground max-w-lg">
-												{hypno
-													? "Continue your personalized hypnosis session or generate a new one tailored to your goals."
-													: "Generate a personalized hypnosis session tailored to your conditioning goals."}
-											</p>
-										</div>
-
-										{/* Action Buttons */}
-										<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-											{loadingHypno ? (
-												<motion.div
-													animate={{ rotate: 360 }}
-													transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-													className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full"
-												/>
-											) : hypno ? (
-												<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-													<Button
-														size="lg"
-														onClick={() => navigate(`/hypno/play/${hypno.id.id}`)}
-														className="relative overflow-hidden bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground font-semibold px-6 shadow-lg shadow-primary/25"
-													>
-														<Play className="h-5 w-5 mr-2" />
-														Play
-													</Button>
-												</motion.div>
-											) : null}
+									<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+										{loadingHypno ? (
+											<motion.div
+												animate={{ rotate: 360 }}
+												transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+												className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full"
+											/>
+										) : hypno ? (
 											<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
 												<Button
 													size="lg"
-													variant="outline"
-													onClick={() => navigate("/hypno/new")}
-													className="border-primary/30 hover:border-primary/60 hover:bg-primary/5 font-semibold px-6"
+													onClick={() => navigate(`/hypno/play/${hypno.id.id}`)}
+													className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6"
 												>
-													<RefreshCw className="h-5 w-5 mr-2" />
-													{hypno ? "Regenerate" : "Generate New"}
+													<Play className="h-5 w-5 mr-2" />
+													Play
 												</Button>
 											</motion.div>
-										</div>
+										) : null}
+										<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+											<Button
+												size="lg"
+												variant="outline"
+												onClick={() => navigate("/hypno/new")}
+												className="border-primary/30 hover:border-primary/60 hover:bg-primary/5 font-semibold px-6"
+											>
+												<RefreshCw className="h-5 w-5 mr-2" />
+												{hypno ? "Regenerate" : "Generate New"}
+											</Button>
+										</motion.div>
 									</div>
-								</CardContent>
-							</Card>
-						</div>
+								</div>
+							</CardContent>
+						</Card>
 					</motion.div>
 
 					{/* Other Quick Actions */}
@@ -489,21 +324,21 @@ export function Dashboard() {
 							{
 								onClick: () => navigate("/coach"),
 								title: "Chat with Coach",
-								description: "Review your progress and get personalized guidance",
+								description: "Get personalized guidance",
 								variant: "outline" as const,
 								icon: <MessageSquare className="h-6 w-6" />,
 							},
 							{
 								onClick: () => navigate("/challenges"),
 								title: "Daily Challenges",
-								description: "Complete real-world conditioning tasks to reinforce learning",
+								description: "Complete real-world tasks",
 								variant: "outline" as const,
 								icon: <Target className="h-6 w-6" />,
 							},
 							{
 								onClick: () => navigate("/reflection"),
 								title: "Reflection",
-								description: "Assess your conditioning progress and insights",
+								description: "Assess your progress",
 								variant: "outline" as const,
 								icon: <Activity className="h-6 w-6" />,
 							},
@@ -533,32 +368,23 @@ export function Dashboard() {
 					</div>
 				</motion.div>
 
-				{/* Current Plan with gradient border glow effect */}
 				{profile.plan && (
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
-						className="relative"
 					>
-						{/* Gradient border glow */}
-						<div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 via-accent/50 to-primary/50 rounded-2xl blur opacity-30" />
-
-						<Card className="relative border-2 border-primary/20 overflow-hidden rounded-2xl bg-background/95 backdrop-blur-sm">
-							{/* Background decoration */}
-							<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-							<div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-							<CardHeader className="relative">
+						<Card className="border border-primary/20 rounded-2xl bg-background">
+							<CardHeader>
 								<div className="flex items-center gap-3">
-									<div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20">
+									<div className="p-2 rounded-xl bg-primary/10">
 										<Sparkles className="h-5 w-5 text-primary" />
 									</div>
 									<CardTitle className="text-xl">Current Conditioning Plan</CardTitle>
 								</div>
 							</CardHeader>
-							<CardContent className="relative space-y-3">
-								<div className="p-5 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 border border-primary/20 backdrop-blur-sm">
+							<CardContent className="space-y-3">
+								<div className="p-5 rounded-xl bg-primary/5 border border-primary/20">
 									<p className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
 										<Target className="h-4 w-4" />
 										Plan Focus
@@ -570,41 +396,20 @@ export function Dashboard() {
 					</motion.div>
 				)}
 
-				{/* History Timeline with visual polish */}
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4 }}
-					className="relative"
 				>
-					{/* Section header with decorative elements */}
-					<div className="flex items-center gap-4 mb-6">
-						<div className="flex items-center gap-2">
-							<div className="p-1.5 rounded-lg bg-primary/10">
-								<Activity className="h-5 w-5 text-primary" />
-							</div>
-							<h2 className="text-xl font-bold">Journey History</h2>
+					<div className="flex items-center gap-2 mb-6">
+						<div className="p-1.5 rounded-lg bg-primary/10">
+							<Activity className="h-5 w-5 text-primary" />
 						</div>
-						<div className="flex-1 h-px bg-gradient-to-r from-primary/30 via-primary/10 to-transparent" />
-						<div className="hidden sm:flex items-center gap-1">
-							{["dot-1", "dot-2", "dot-3"].map((id, i) => (
-								<motion.div
-									key={id}
-									animate={{ opacity: [0.3, 0.6, 0.3] }}
-									transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-									className="w-1.5 h-1.5 rounded-full bg-primary/40"
-								/>
-							))}
-						</div>
+						<h2 className="text-xl font-bold">Journey History</h2>
 					</div>
 
-					<Card className="relative border-2 border-primary/10 overflow-hidden rounded-2xl">
-						{/* Subtle background decoration */}
-						<div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-						<div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-primary/10 to-transparent rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-						<div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-accent/10 to-transparent rounded-full translate-x-1/2 translate-y-1/2 pointer-events-none" />
-
-						<CardContent className="p-6 relative">
+					<Card className="border border-primary/10 rounded-2xl">
+						<CardContent className="p-6">
 							{loadingHistory ? (
 								<div className="flex flex-col items-center justify-center py-12">
 									<motion.div
@@ -618,9 +423,6 @@ export function Dashboard() {
 								<div className="flex flex-col items-center justify-center py-12">
 									<Activity className="h-12 w-12 text-muted-foreground mb-4" />
 									<p className="text-muted-foreground font-medium">No history yet</p>
-									<p className="text-sm text-muted-foreground mt-2">
-										Start your first session to see your progress here
-									</p>
 								</div>
 							) : (
 								<HistoryTimeline history={history} />

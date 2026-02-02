@@ -46,9 +46,9 @@ function RatingDisplay({ rating, maxRating = 10 }: { rating: number; maxRating?:
 							className={cn(
 								"w-2 h-2 rounded-full transition-all duration-300",
 								filled
-									? "bg-gradient-to-r from-pink-400 to-fuchsia-500 shadow-[0_0_4px_rgba(236,72,153,0.5)]"
+									? "bg-pink-400 shadow-[0_0_4px_rgba(236,72,153,0.5)]"
 									: partial
-										? "bg-gradient-to-r from-pink-400/50 to-fuchsia-500/50"
+										? "bg-pink-400/50"
 										: "bg-muted-foreground/20"
 							)}
 						/>
@@ -89,22 +89,10 @@ function TimelineItem({
 			{!isLast && (
 				<div className="absolute left-[18px] top-10 h-[calc(100%-2.5rem)] w-[2px]">
 					{/* Main gradient line */}
-					<div
-						className={cn(
-							"absolute inset-0 rounded-full",
-							isSession
-								? "bg-gradient-to-b from-pink-500/80 via-fuchsia-500/40 to-transparent"
-								: "bg-gradient-to-b from-violet-500/80 via-purple-500/40 to-transparent"
-						)}
-					/>
+					<div className="absolute inset-0 rounded-full bg-gradient-to-b from-pink-500/80 via-pink-500/40 to-transparent" />
 					{/* Animated glow effect */}
 					<motion.div
-						className={cn(
-							"absolute inset-0 rounded-full blur-sm",
-							isSession
-								? "bg-gradient-to-b from-pink-400/60 to-transparent"
-								: "bg-gradient-to-b from-violet-400/60 to-transparent"
-						)}
+						className="absolute inset-0 rounded-full blur-sm bg-gradient-to-b from-pink-400/60 to-transparent"
 						animate={{
 							opacity: [0.3, 0.7, 0.3],
 						}}
@@ -135,12 +123,7 @@ function TimelineItem({
 				{/* Outer glow ring for recent items */}
 				{isRecent && (
 					<motion.div
-						className={cn(
-							"absolute -inset-1.5 rounded-full",
-							isSession
-								? "bg-gradient-to-r from-pink-500/30 to-fuchsia-500/30"
-								: "bg-gradient-to-r from-violet-500/30 to-purple-500/30"
-						)}
+						className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-pink-500/30 to-pink-500/30"
 						animate={{
 							scale: [1, 1.2, 1],
 							opacity: [0.5, 0.2, 0.5],
@@ -153,15 +136,7 @@ function TimelineItem({
 					/>
 				)}
 				{/* Icon container */}
-				<div
-					className={cn(
-						"relative h-10 w-10 rounded-full flex items-center justify-center",
-						"shadow-lg border-2",
-						isSession
-							? "bg-gradient-to-br from-pink-500 to-fuchsia-600 border-pink-400/50 shadow-pink-500/25"
-							: "bg-gradient-to-br from-violet-500 to-purple-600 border-violet-400/50 shadow-violet-500/25"
-					)}
-				>
+				<div className="relative h-10 w-10 rounded-full flex items-center justify-center shadow-lg border-2 bg-gradient-to-br from-pink-500 to-pink-600 border-pink-400/50 shadow-pink-500/25">
 					<Icon className="h-5 w-5 text-white drop-shadow-sm" />
 					{/* Inner shine */}
 					<div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20" />
@@ -180,32 +155,13 @@ function TimelineItem({
 				whileTap={{ scale: 0.99 }}
 			>
 				{/* Gradient border */}
-				<div
-					className={cn(
-						"absolute inset-0 rounded-2xl p-[1px]",
-						isSession
-							? "bg-gradient-to-br from-pink-500/50 via-fuchsia-500/30 to-transparent"
-							: "bg-gradient-to-br from-violet-500/50 via-purple-500/30 to-transparent"
-					)}
-				>
+				<div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-pink-500/50 via-pink-500/30 to-transparent">
 					<div className="absolute inset-[1px] rounded-2xl bg-card" />
 				</div>
 
 				{/* Decorative corner element */}
-				<div
-					className={cn(
-						"absolute top-0 right-0 w-16 h-16 pointer-events-none",
-						isSession
-							? "bg-gradient-to-bl from-pink-500/10 to-transparent"
-							: "bg-gradient-to-bl from-violet-500/10 to-transparent"
-					)}
-				/>
-				<div
-					className={cn(
-						"absolute top-2 right-2 w-1.5 h-1.5 rounded-full",
-						isSession ? "bg-pink-400/60" : "bg-violet-400/60"
-					)}
-				/>
+				<div className="absolute top-0 right-0 w-16 h-16 pointer-events-none bg-gradient-to-bl from-pink-500/10 to-transparent" />
+				<div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-pink-400/60" />
 
 				{/* Card content */}
 				<div className="relative p-4 bg-card/95 backdrop-blur-sm rounded-2xl">
@@ -213,22 +169,11 @@ function TimelineItem({
 					<div className="flex items-start justify-between mb-3">
 						<div className="flex-1">
 							<div className="flex items-center gap-2 mb-2">
-								<h4
-									className={cn(
-										"font-semibold text-sm",
-										isSession ? "text-pink-400" : "text-violet-400"
-									)}
-								>
+								<h4 className="font-semibold text-sm text-pink-400">
 									{isSession ? "Hypnosis Session" : "Reflection"}
 								</h4>
 								{isSession && item.session_type && (
-									<span
-										className={cn(
-											"text-xs px-2.5 py-0.5 rounded-full font-medium",
-											"bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20",
-											"text-pink-300 border border-pink-500/30"
-										)}
-									>
+									<span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-pink-500/20 text-pink-300 border border-pink-500/30">
 										{item.session_type}
 									</span>
 								)}
@@ -252,12 +197,7 @@ function TimelineItem({
 							)}
 						</div>
 						<motion.div
-							className={cn(
-								"p-1.5 rounded-full transition-colors",
-								isSession
-									? "text-pink-400 group-hover:bg-pink-500/20"
-									: "text-violet-400 group-hover:bg-violet-500/20"
-							)}
+							className="p-1.5 rounded-full transition-colors text-pink-400 group-hover:bg-pink-500/20"
 							animate={{ rotate: isExpanded ? 180 : 0 }}
 							transition={{ duration: 0.3 }}
 						>
@@ -275,12 +215,7 @@ function TimelineItem({
 								transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
 								className="overflow-hidden"
 							>
-								<div
-									className={cn(
-										"pt-4 mt-3 border-t space-y-4",
-										isSession ? "border-pink-500/20" : "border-violet-500/20"
-									)}
-								>
+								<div className="pt-4 mt-3 border-t space-y-4 border-pink-500/20">
 									{isSession ? (
 										<>
 											{item.debrief?.questions.map((q, idx) => (
@@ -292,12 +227,7 @@ function TimelineItem({
 													className="space-y-2"
 												>
 													<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
-														<span
-															className={cn(
-																"w-1 h-1 rounded-full",
-																isSession ? "bg-pink-400" : "bg-violet-400"
-															)}
-														/>
+														<span className="w-1 h-1 rounded-full bg-pink-400" />
 														{q.question}
 													</p>
 													{q.type === "rating" ? (
@@ -305,13 +235,7 @@ function TimelineItem({
 															<RatingDisplay rating={Number(q.answer)} />
 														</div>
 													) : (
-														<div
-															className={cn(
-																"pl-4 py-2 rounded-lg",
-																"bg-gradient-to-r from-pink-500/5 to-transparent",
-																"border-l-2 border-pink-500/40"
-															)}
-														>
+														<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
 															<p className="text-xs text-muted-foreground italic">
 																"{q.answer as string}"
 															</p>
@@ -330,7 +254,7 @@ function TimelineItem({
 												className="space-y-2"
 											>
 												<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
-													<span className="w-1 h-1 rounded-full bg-violet-400" />
+													<span className="w-1 h-1 rounded-full bg-pink-400" />
 													{q.question}
 												</p>
 												{q.type === "rating" ? (
@@ -338,13 +262,7 @@ function TimelineItem({
 														<RatingDisplay rating={Number(q.answer)} />
 													</div>
 												) : (
-													<div
-														className={cn(
-															"pl-4 py-2 rounded-lg",
-															"bg-gradient-to-r from-violet-500/5 to-transparent",
-															"border-l-2 border-violet-500/40"
-														)}
-													>
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
 														<p className="text-xs text-muted-foreground italic">
 															"{q.answer as string}"
 														</p>
@@ -360,15 +278,7 @@ function TimelineItem({
 				</div>
 
 				{/* Hover glow effect */}
-				<motion.div
-					className={cn(
-						"absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none",
-						"group-hover:opacity-100",
-						isSession
-							? "shadow-[0_8px_30px_-5px_rgba(236,72,153,0.3)]"
-							: "shadow-[0_8px_30px_-5px_rgba(139,92,246,0.3)]"
-					)}
-				/>
+				<motion.div className="absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none group-hover:opacity-100 shadow-[0_8px_30px_-5px_rgba(236,72,153,0.3)]" />
 			</motion.div>
 		</motion.div>
 	);
@@ -384,15 +294,9 @@ function EmptyStateDecoration() {
 				animate={{ rotate: 360 }}
 				transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
 			/>
-			{/* Middle ring */}
-			<motion.div
-				className="absolute inset-2 rounded-full border border-fuchsia-500/20"
-				animate={{ rotate: -360 }}
-				transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-			/>
 			{/* Inner glow */}
 			<motion.div
-				className="absolute inset-4 rounded-full bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20"
+				className="absolute inset-4 rounded-full bg-pink-500/20"
 				animate={{
 					scale: [1, 1.1, 1],
 					opacity: [0.5, 0.8, 0.5],
@@ -430,7 +334,7 @@ function EmptyStateDecoration() {
 						ease: "easeInOut",
 					}}
 				>
-					<Star className="h-3 w-3 text-fuchsia-400 fill-fuchsia-400/30" />
+					<Star className="h-3 w-3 text-pink-400 fill-pink-400/30" />
 				</motion.div>
 			))}
 		</div>
@@ -466,7 +370,7 @@ export function HistoryTimeline({ history, className }: HistoryTimelineProps) {
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
 					transition={{ delay: 0.2 }}
-					className="text-lg font-semibold bg-gradient-to-r from-pink-400 to-fuchsia-400 bg-clip-text text-transparent mb-2"
+					className="text-lg font-semibold text-pink-400 mb-2"
 				>
 					Your Journey Awaits
 				</motion.h3>
@@ -484,11 +388,7 @@ export function HistoryTimeline({ history, className }: HistoryTimelineProps) {
 					initial={{ opacity: 0, scale: 0.9 }}
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ delay: 0.4 }}
-					className={cn(
-						"px-4 py-2 rounded-full",
-						"bg-gradient-to-r from-pink-500/10 to-fuchsia-500/10",
-						"border border-pink-500/20"
-					)}
+					className="px-4 py-2 rounded-full bg-pink-500/10 border border-pink-500/20"
 				>
 					<p className="text-xs text-pink-400/80 font-medium">✨ Start your first session</p>
 				</motion.div>
@@ -503,7 +403,7 @@ export function HistoryTimeline({ history, className }: HistoryTimelineProps) {
 			className={cn("relative", className)}
 		>
 			{/* Decorative gradient background */}
-			<div className="absolute -inset-4 bg-gradient-to-b from-pink-500/5 via-transparent to-fuchsia-500/5 rounded-3xl pointer-events-none" />
+			<div className="absolute -inset-4 bg-gradient-to-b from-pink-500/5 via-transparent to-pink-500/5 rounded-3xl pointer-events-none" />
 
 			{/* Timeline items */}
 			<div className="relative space-y-0">

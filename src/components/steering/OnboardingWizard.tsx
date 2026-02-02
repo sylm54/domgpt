@@ -117,7 +117,7 @@ export function OnboardingWizard() {
 
 					{/* Animated Progress Line */}
 					<div
-						className="absolute top-4 h-0.5 bg-gradient-to-r from-primary via-primary to-primary/50 transition-all duration-500 ease-out"
+						className="absolute top-4 h-0.5 bg-primary transition-all duration-500 ease-out"
 						style={{
 							left: "2rem",
 							width: `calc(${(currentStep / (steps.length - 1)) * 100}% - 2rem)`,
@@ -145,16 +145,11 @@ export function OnboardingWizard() {
 											isCompleted
 												? "bg-primary text-primary-foreground"
 												: isActive
-													? "bg-primary text-primary-foreground shadow-lg shadow-primary/40"
+													? "bg-primary text-primary-foreground"
 													: "bg-muted/80 text-muted-foreground border-2 border-muted-foreground/20"
 										}
 									`}
 								>
-									{/* Glow effect for active step */}
-									{isActive && (
-										<div className="absolute inset-0 rounded-full bg-primary/30 animate-pulse blur-md -z-10" />
-									)}
-
 									{isCompleted ? <Check className="w-4 h-4" /> : <span>{index + 1}</span>}
 								</div>
 
@@ -180,18 +175,11 @@ export function OnboardingWizard() {
 				</div>
 			</div>
 
-			{/* Step Content - Frosted Glass Card */}
-			<Card className="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-background/80 backdrop-blur-xl border-border/50 shadow-2xl">
-				{/* Decorative corner gradients */}
-				<div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-primary/10 via-transparent to-transparent pointer-events-none" />
-				<div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-primary/10 via-transparent to-transparent pointer-events-none" />
-
-				{/* Subtle border glow */}
-				<div className="absolute inset-0 rounded-lg border border-primary/5 pointer-events-none" />
-
+			{/* Step Content */}
+			<Card className="flex-1 flex flex-col min-h-0 relative overflow-hidden bg-background border-border">
 				<CardHeader className="relative pb-4">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+						<div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
 							<span className="text-primary font-bold">{currentStep + 1}</span>
 						</div>
 						<div>
@@ -235,7 +223,7 @@ export function OnboardingWizard() {
 							${
 								currentStep === 0 && !audioTestCompleted
 									? "opacity-50"
-									: "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 hover:shadow-primary/30"
+									: "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30"
 							}
 						`}
 					>
@@ -399,7 +387,7 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 						size="lg"
 						className={`
 							w-full max-w-md h-14 text-base font-medium
-							${!isGenerating && "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 hover:shadow-primary/40"}
+							${!isGenerating && "bg-primary hover:bg-primary/90"}
 							transition-all duration-300
 						`}
 					>
@@ -426,11 +414,9 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 					</div>
 					<div className="w-full bg-secondary/50 h-3 rounded-full overflow-hidden">
 						<div
-							className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/70 transition-all duration-300 relative"
+							className="h-full rounded-full bg-primary transition-all duration-300 relative"
 							style={{ width: `${progress}%` }}
-						>
-							<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
-						</div>
+						/>
 					</div>
 					{stage === "download" && (
 						<p className="text-xs text-muted-foreground text-center">
@@ -449,7 +435,7 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 
 			{generatedScript && (
 				<div className="space-y-5">
-					<div className="bg-gradient-to-r from-emerald-500/10 to-green-500/10 p-4 rounded-xl border border-emerald-500/20">
+					<div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
 						<div className="flex items-center gap-3">
 							<div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
 								<Check className="w-5 h-5 text-emerald-500" />
@@ -464,16 +450,16 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 					</div>
 
 					{/* Audio Player Card */}
-					<div className="bg-gradient-to-br from-muted/50 to-muted/30 p-6 rounded-2xl border border-border/50 space-y-5">
+					<div className="bg-muted/30 p-6 rounded-2xl border border-border/50 space-y-5">
 						{/* Waveform Visualization Placeholder */}
-						<div className="h-16 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-xl flex items-center justify-center overflow-hidden relative">
+						<div className="h-16 bg-primary/5 rounded-xl flex items-center justify-center overflow-hidden relative">
 							<div className="flex items-end gap-1 h-12">
 								{[...Array(40)].map((_, i) => {
 									const barId = `wave-bar-${i}-static`;
 									return (
 										<div
 											key={barId}
-											className={`w-1 rounded-full bg-gradient-to-t from-primary/40 to-primary/80 transition-all duration-150 ${isPlaying ? "animate-pulse" : ""}`}
+											className={`w-1 rounded-full bg-primary/60 transition-all duration-150 ${isPlaying ? "animate-pulse" : ""}`}
 											style={{
 												height: `${20 + Math.sin(i * 0.5) * 15 + (isPlaying ? Math.random() * 20 : 0)}px`,
 												animationDelay: `${i * 50}ms`,
@@ -504,24 +490,17 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 								)}
 							</Button>
 
-							{/* Play Button with Ring Animation */}
+							{/* Play Button */}
 							<div className="relative">
-								{isPlaying && (
-									<>
-										<div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
-										<div className="absolute -inset-1 rounded-full bg-gradient-to-r from-primary/40 to-primary/20 animate-pulse blur-sm" />
-									</>
-								)}
 								<Button
-									size="icon"
-									onClick={togglePlay}
-									className={`
-										relative h-16 w-16 rounded-full 
-										bg-gradient-to-br from-primary to-primary/80 
-										hover:from-primary/90 hover:to-primary
-										shadow-lg shadow-primary/30 hover:shadow-primary/50
-										transition-all duration-200
-									`}
+									onClick={onComplete}
+									size="lg"
+									className="
+					w-full max-w-md h-14 text-base font-semibold
+					bg-primary
+					hover:bg-primary/90
+					transition-all duration-300
+				"
 								>
 									{isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
 								</Button>
@@ -544,7 +523,7 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 						<div className="space-y-2">
 							<div className="relative h-2 bg-muted rounded-full overflow-hidden">
 								<div
-									className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-primary/70 rounded-full transition-all duration-100"
+									className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all duration-100"
 									style={{ width: `${progressPercent}%` }}
 								>
 									<div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full shadow-lg shadow-primary/50" />
@@ -739,7 +718,7 @@ function CoachTraitsStep() {
 			</div>
 
 			{selectedTraits.length > 0 && (
-				<div className="flex flex-wrap gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20">
+				<div className="flex flex-wrap gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20">
 					{selectedTraits.map((trait) => (
 						<Badge
 							key={trait}
@@ -766,16 +745,11 @@ function CoachTraitsStep() {
 								hover:-translate-y-0.5 hover:shadow-lg
 								${
 									isSelected
-										? "bg-primary/10 border-primary shadow-lg shadow-primary/10"
+										? "bg-primary/10 border-primary"
 										: "bg-background/50 border-border/50 hover:border-border hover:bg-muted/30"
 								}
 							`}
 						>
-							{/* Glow effect when selected */}
-							{isSelected && (
-								<div className="absolute inset-0 rounded-xl bg-primary/5 blur-xl -z-10" />
-							)}
-
 							<div className="flex items-start gap-3">
 								{/* Custom Checkbox */}
 								<div
@@ -839,36 +813,10 @@ function DiscoveryStep({ model, onComplete }: { model: Model; onComplete: () => 
 function CompleteStep({ onComplete }: { onComplete: () => void }) {
 	return (
 		<div className="text-center space-y-8 py-8">
-			{/* Animated Checkmark with Confetti-like effects */}
+			{/* Animated Checkmark */}
 			<div className="relative">
-				{/* Celebration particles */}
-				<div className="absolute inset-0 flex items-center justify-center">
-					{[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-						<div
-							key={`celebration-particle-${i}`}
-							className="absolute w-2 h-2 rounded-full bg-primary/60 animate-ping"
-							style={{
-								animationDelay: `${i * 150}ms`,
-								animationDuration: "2s",
-								transform: `rotate(${i * 45}deg) translateY(-40px)`,
-							}}
-						/>
-					))}
-				</div>
-
-				{/* Glow rings */}
-				<div className="absolute inset-0 flex items-center justify-center">
-					<div className="w-24 h-24 rounded-full bg-primary/10 animate-pulse" />
-				</div>
-				<div className="absolute inset-0 flex items-center justify-center">
-					<div
-						className="w-20 h-20 rounded-full bg-primary/20 animate-pulse"
-						style={{ animationDelay: "150ms" }}
-					/>
-				</div>
-
 				{/* Main checkmark circle */}
-				<div className="relative w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-primary/40">
+				<div className="relative w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-primary/40">
 					<svg
 						className="w-10 h-10 text-primary-foreground animate-[bounce_1s_ease-in-out]"
 						fill="none"
@@ -892,16 +840,14 @@ function CompleteStep({ onComplete }: { onComplete: () => void }) {
 			</div>
 
 			<div className="space-y-2">
-				<h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-					You're all set!
-				</h3>
+				<h3 className="text-2xl font-bold text-primary">You're all set!</h3>
 				<p className="text-muted-foreground max-w-md mx-auto">
 					Your profile has been created and your Coach understands your goals. Time to begin your
 					transformation.
 				</p>
 			</div>
 
-			<div className="bg-gradient-to-br from-muted/50 to-muted/30 p-6 rounded-2xl text-left max-w-md mx-auto border border-border/50">
+			<div className="bg-muted/30 p-6 rounded-2xl text-left max-w-md mx-auto border border-border/50">
 				<h4 className="font-semibold mb-4 flex items-center gap-2">
 					<Sparkles className="w-4 h-4 text-primary" />
 					What's next
@@ -931,13 +877,7 @@ function CompleteStep({ onComplete }: { onComplete: () => void }) {
 			<Button
 				onClick={onComplete}
 				size="lg"
-				className="
-					w-full max-w-md h-14 text-base font-semibold
-					bg-gradient-to-r from-primary via-primary to-primary/80
-					hover:from-primary/90 hover:via-primary/90 hover:to-primary
-					shadow-xl shadow-primary/30 hover:shadow-primary/50
-					transition-all duration-300 hover:scale-[1.02]
-				"
+				className="w-full max-w-md h-14 text-base font-semibold bg-primary hover:bg-primary/90 transition-all duration-300"
 			>
 				<Sparkles className="w-5 h-5 mr-2" />
 				Start Your Journey

@@ -59,7 +59,7 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 						<motion.div
 							animate={{ rotate: 360 }}
 							transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-							className="absolute inset-0 rounded-full border-3 border-transparent border-t-pink-500 border-r-fuchsia-500/50"
+							className="absolute inset-0 rounded-full border-3 border-transparent border-t-pink-500"
 						/>
 					</div>
 					<p className="text-muted-foreground">Loading challenges...</p>
@@ -80,9 +80,9 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 					initial={{ scale: 0.8 }}
 					animate={{ scale: 1 }}
 					transition={{ type: "spring", stiffness: 200, damping: 15 }}
-					className="relative mb-6"
+					className="mb-6"
 				>
-					<div className="w-24 h-24 rounded-full bg-gradient-to-br from-pink-500/10 to-fuchsia-500/10 flex items-center justify-center">
+					<div className="w-24 h-24 rounded-full bg-pink-500/10 flex items-center justify-center">
 						<motion.div
 							animate={{ y: [0, -4, 0] }}
 							transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
@@ -102,12 +102,6 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 							</svg>
 						</motion.div>
 					</div>
-					{/* Decorative rings */}
-					<motion.div
-						animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
-						transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
-						className="absolute inset-0 rounded-full border-2 border-pink-500/20"
-					/>
 				</motion.div>
 
 				<h3 className="text-lg font-semibold text-foreground mb-2">No Active Challenges</h3>
@@ -148,7 +142,7 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 					<motion.span
 						initial={{ scale: 0 }}
 						animate={{ scale: 1 }}
-						className="px-3 py-1 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white text-sm font-bold shadow-md shadow-pink-500/25"
+						className="px-3 py-1 rounded-full bg-pink-500 text-white text-sm font-bold shadow-md shadow-pink-500/25"
 					>
 						{challenges.length}
 					</motion.span>
@@ -177,15 +171,12 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 									className={cn(
 										"relative overflow-hidden transition-all duration-300",
 										"border-l-4 border-l-transparent",
-										"hover:shadow-lg hover:shadow-pink-500/10 hover:-translate-y-1",
+										"hover:shadow-lg hover:-translate-y-1",
 										isCompleted && "opacity-60 border-l-green-500",
 										isCelebrating && "border-l-green-500",
-										!isCompleted && !isCelebrating && "border-l-pink-500 hover:border-l-fuchsia-500"
+										!isCompleted && !isCelebrating && "border-l-pink-500"
 									)}
 								>
-									{/* Corner Gradient Decoration */}
-									<div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-500/5 to-transparent pointer-events-none" />
-
 									{/* Celebration Overlay */}
 									<AnimatePresence>
 										{isCelebrating && (
@@ -216,9 +207,8 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 														}}
 														className={cn(
 															"absolute w-2 h-2 rounded-full",
-															i % 3 === 0 && "bg-green-400",
-															i % 3 === 1 && "bg-emerald-400",
-															i % 3 === 2 && "bg-pink-400"
+															i % 2 === 0 && "bg-green-400",
+															i % 2 === 1 && "bg-emerald-400"
 														)}
 													/>
 												))}
@@ -261,7 +251,7 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 															key="pending"
 															initial={{ scale: 0.8 }}
 															animate={{ scale: 1 }}
-															className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 border-2 border-pink-500/30 flex items-center justify-center"
+															className="w-8 h-8 rounded-full bg-pink-500/20 border-2 border-pink-500/30 flex items-center justify-center"
 														>
 															<div className="w-2 h-2 rounded-full bg-pink-500" />
 														</motion.div>
@@ -282,7 +272,7 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 										<div
 											className={cn(
 												"p-4 rounded-xl transition-colors",
-												"bg-gradient-to-br from-muted/50 to-muted",
+												"bg-muted/50",
 												"border border-border/50",
 												isCompleted && "bg-muted/30"
 											)}
@@ -311,9 +301,8 @@ export function ChallengeList({ refreshKey }: ChallengeListProps) {
 															disabled={isCompleting}
 															className={cn(
 																"w-full h-11 font-semibold relative overflow-hidden",
-																"bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-500",
-																"hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-600",
-																"shadow-md shadow-pink-500/20 hover:shadow-lg hover:shadow-pink-500/30",
+																"bg-pink-500 hover:bg-pink-600",
+																"shadow-md hover:shadow-lg",
 																"transition-all duration-300",
 																"disabled:opacity-50 disabled:cursor-not-allowed"
 															)}

@@ -33,26 +33,8 @@ export function ChallengesPage() {
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.5 }}
-				className="relative overflow-hidden bg-gradient-to-br from-pink-500/10 via-fuchsia-500/5 to-purple-500/10 border-b border-pink-500/20"
+				className="relative overflow-hidden border-b border-primary/20"
 			>
-				{/* Decorative Elements */}
-				<div className="absolute inset-0 overflow-hidden pointer-events-none">
-					<div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-pink-500/20 to-fuchsia-500/20 rounded-full blur-3xl" />
-					<div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-purple-500/15 to-pink-500/15 rounded-full blur-3xl" />
-					<motion.div
-						animate={{
-							scale: [1, 1.2, 1],
-							opacity: [0.3, 0.5, 0.3],
-						}}
-						transition={{
-							duration: 4,
-							repeat: Number.POSITIVE_INFINITY,
-							ease: "easeInOut",
-						}}
-						className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-pink-400/10 to-transparent rounded-full"
-					/>
-				</div>
-
 				{/* Hero Content */}
 				<div className="relative px-6 py-12 md:py-16">
 					<motion.div
@@ -65,21 +47,19 @@ export function ChallengesPage() {
 							initial={{ scale: 0.9, opacity: 0 }}
 							animate={{ scale: 1, opacity: 1 }}
 							transition={{ duration: 0.5, delay: 0.2 }}
-							className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-600 dark:text-pink-400 text-sm font-medium"
+							className="inline-flex items-center gap-2 px-4 py-1.5 mb-4 rounded-full border border-primary/20 text-primary text-sm font-medium"
 						>
 							<span className="relative flex h-2 w-2">
-								<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75" />
-								<span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500" />
+								<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+								<span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
 							</span>
 							Daily Training Mode
 						</motion.div>
 
-						<h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-600 bg-clip-text text-transparent mb-3">
-							Daily Challenges
-						</h1>
+						<h1 className="text-3xl md:text-4xl font-bold text-primary mb-3">Daily Challenges</h1>
 						<p className="text-muted-foreground text-lg max-w-2xl mx-auto">
 							Transform your goals into actionable micro-challenges.
-							<span className="block mt-1 text-pink-600/80 dark:text-pink-400/80 font-medium">
+							<span className="block mt-1 text-primary/80 font-medium">
 								Small steps, big transformations.
 							</span>
 						</p>
@@ -99,9 +79,9 @@ export function ChallengesPage() {
 						{/* Section Header */}
 						<div className="flex items-center gap-3 mb-4">
 							<div className="flex items-center gap-2">
-								<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-pink-500/25">
+								<div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
 									<svg
-										className="w-4 h-4 text-white"
+										className="w-4 h-4 text-primary-foreground"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -116,7 +96,6 @@ export function ChallengesPage() {
 								</div>
 								<h2 className="text-lg font-semibold">Generate</h2>
 							</div>
-							<div className="flex-1 h-px bg-gradient-to-r from-pink-500/50 to-transparent" />
 						</div>
 						<ChallengeGenerator model={model} onChallengesGenerated={handleChallengesGenerated} />
 					</motion.div>
@@ -130,9 +109,9 @@ export function ChallengesPage() {
 						{/* Section Header */}
 						<div className="flex items-center gap-3 mb-4">
 							<div className="flex items-center gap-2">
-								<div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center shadow-lg shadow-fuchsia-500/25">
+								<div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
 									<svg
-										className="w-4 h-4 text-white"
+										className="w-4 h-4 text-primary-foreground"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -147,7 +126,6 @@ export function ChallengesPage() {
 								</div>
 								<h2 className="text-lg font-semibold">Your Challenges</h2>
 							</div>
-							<div className="flex-1 h-px bg-gradient-to-r from-fuchsia-500/50 to-transparent" />
 						</div>
 						<ChallengeList refreshKey={refreshKey} />
 					</motion.div>

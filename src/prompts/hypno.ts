@@ -21,10 +21,10 @@ History:
 ${history || "No prior history available."}
 
 Create a comprehensive session plan with sections for:
-1. Pre-talk (rapport building; optional)
-2. Induction
-3. Deepening
-4. Suggestions (aligned with goal; can span multiple sections)
+1. Pre-talk (rapport building: setting expectations; optional)
+2. Induction (Fixation, PMR, Confusion, binaural, etc.)
+3. Deepening (Staircase, Elevator, Drifting)
+4. Suggestions (aligned with goal: Metaphors,Suggestions,Reframing,Anchoring; can span multiple sections)
 5. Emerging
 6. Post-hypnotic suggestions (optional)
 
@@ -33,16 +33,19 @@ Use CreateSection for each part of the plan.`;
 }
 
 export function getHypnoWriterPrompt(script: string, section: { name: string; content: string }) {
-	return `You are a Hypno Writer Agent.
+  return `You are a Hypno Writer Agent.
 
 ## Your role is to:
 1. Receive a prompt of a hypno section from the Planner(the user message)
 2. Write a hypnotic scripts for this section to be used by a tts system using the below audio tags
 
 ## Key Requirements:
-- Write in a calm, soothing, and authoritative tone.
-- Include pacing statements to build rapport.
-- Repeat key suggestions for reinforcement.
+- Pacing and Leading: Match current experience, then guide to new experience.
+- Embedded Commands: Hide commands in sentences using slight tonal shifts
+- Presuppositions: Assume the success of the suggestion.
+- Sensory Acuity: Use VAK (Visual, Auditory, Kinesthetic) language.
+- Double Binds: Illusion of choice.
+- Repetition: Repeat key phrases 3 times with slight variations.
 - Use vivid imagery and sensory language.
 - Ensure suggestions align with the user's hypno goals.
 - Use Hypno and conditioning techniques effectively.

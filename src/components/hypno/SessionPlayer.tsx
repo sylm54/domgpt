@@ -20,87 +20,11 @@ import { Button } from "../ui/button";
 
 interface SessionPlayerProps {
 	session: HypnoFile;
-	model?: Model; // Kept for backward compatibility but not used
+	model?: Model;
 	onComplete?: () => void;
 }
 
-// Floating orb component for ambient decoration
-function FloatingOrb({
-	delay = 0,
-	size = 100,
-	x = 0,
-	y = 0,
-	color = "primary",
-}: {
-	delay?: number;
-	size?: number;
-	x?: number;
-	y?: number;
-	color?: string;
-}) {
-	const colorClasses = {
-		primary: "from-primary/20 to-primary/5",
-		purple: "from-purple-500/20 to-purple-500/5",
-		blue: "from-blue-500/20 to-blue-500/5",
-		indigo: "from-indigo-500/20 to-indigo-500/5",
-	};
-
-	return (
-		<motion.div
-			className={`absolute rounded-full bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses] || colorClasses.primary} blur-xl pointer-events-none`}
-			style={{ width: size, height: size, left: `${x}%`, top: `${y}%` }}
-			initial={{ opacity: 0, scale: 0.8 }}
-			animate={{
-				opacity: [0.3, 0.6, 0.3],
-				scale: [1, 1.2, 1],
-				x: [0, 20, 0],
-				y: [0, -20, 0],
-			}}
-			transition={{
-				duration: 8,
-				delay,
-				repeat: Infinity,
-				ease: "easeInOut",
-			}}
-		/>
-	);
-}
-
-// Pulsing ring component for visualization
-function PulsingRing({
-	delay = 0,
-	size = 100,
-	isPlaying = false,
-}: {
-	delay?: number;
-	size?: number;
-	isPlaying?: boolean;
-}) {
-	return (
-		<motion.div
-			className="absolute rounded-full border border-primary/30"
-			style={{ width: size, height: size }}
-			initial={{ opacity: 0, scale: 0.8 }}
-			animate={
-				isPlaying
-					? {
-							opacity: [0.3, 0.1, 0.3],
-							scale: [1, 1.3, 1],
-						}
-					: { opacity: 0.2, scale: 1 }
-			}
-			transition={{
-				duration: 3,
-				delay,
-				repeat: Infinity,
-				ease: "easeInOut",
-			}}
-		/>
-	);
-}
-
 export function SessionPlayer({ session, model: _model, onComplete }: SessionPlayerProps) {
-	// Audio playback state
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const logHistoryData = useLogHistoryData();
 	const [isPlaying, setIsPlaying] = useState(false);
@@ -113,15 +37,12 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 	const [playbackRate, setPlaybackRate] = useState(1);
 	const [dir, setDir] = useState<string | null>(null);
 
-	// Debrief state
 	const [showDebrief, setShowDebrief] = useState(false);
 
-	// Load app data directory
 	useEffect(() => {
 		appDataDir().then(setDir);
 	}, []);
 
-	// Initialize audio element
 	useEffect(() => {
 		if (session.hypno_file && dir) {
 			console.log(`${dir}/${session.hypno_file}`);
@@ -170,7 +91,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		}
 	}, [session.hypno_file, dir]);
 
-	// Handle play/pause
 	const togglePlay = async () => {
 		if (!audioRef.current) return;
 
@@ -187,7 +107,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		}
 	};
 
-	// Handle seeking
 	const handleSeek = (value: number[]) => {
 		if (!audioRef.current) return;
 		const seekTime = (value[0] / 100) * duration;
@@ -195,7 +114,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		setCurrentTime(seekTime);
 	};
 
-	// Handle volume change
 	const handleVolumeChange = (value: number[]) => {
 		if (!audioRef.current) return;
 		const newVolume = value[0] / 100;
@@ -204,14 +122,12 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		setIsMuted(newVolume === 0);
 	};
 
-	// Toggle mute
 	const toggleMute = () => {
 		if (!audioRef.current) return;
 		audioRef.current.muted = !isMuted;
 		setIsMuted(!isMuted);
 	};
 
-	// Skip forward/backward
 	const skip = (seconds: number) => {
 		if (!audioRef.current) return;
 		audioRef.current.currentTime = Math.max(
@@ -220,7 +136,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		);
 	};
 
-	// Change playback speed
 	const changePlaybackRate = () => {
 		if (!audioRef.current) return;
 		const newRate =
@@ -229,7 +144,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		setPlaybackRate(newRate);
 	};
 
-	// Restart playback
 	const restart = () => {
 		if (!audioRef.current) return;
 		audioRef.current.currentTime = 0;
@@ -238,17 +152,14 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		}
 	};
 
-	// Format time for display
 	const formatTime = (seconds: number): string => {
 		const mins = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, "0")}`;
 	};
 
-	// Calculate progress percentage
 	const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-	// Handle debrief completion
 	const handleDebriefComplete = async (questions: Question[]) => {
 		const reflection: Reflection = {
 			questions,
@@ -264,7 +175,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		onComplete?.();
 	};
 
-	// Debrief view
 	if (showDebrief) {
 		return (
 			<Questionaire
@@ -279,79 +189,34 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		);
 	}
 
-	// Loading state with atmospheric design
 	if (isLoading) {
 		return (
-			<div className="h-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-purple-950/50 to-slate-900">
-				{/* Floating orbs for atmosphere */}
-				<FloatingOrb delay={0} size={200} x={10} y={20} color="purple" />
-				<FloatingOrb delay={2} size={150} x={70} y={60} color="blue" />
-				<FloatingOrb delay={4} size={180} x={50} y={10} color="indigo" />
-
+			<div className="h-full relative overflow-hidden rounded-xl bg-background">
 				<div className="relative z-10 flex flex-col items-center justify-center h-full space-y-6">
-					{/* Animated loading visualization */}
 					<div className="relative">
-						{[0, 1, 2].map((i) => (
-							<motion.div
-								key={`loading-ring-${i}`}
-								className="absolute rounded-full border border-primary/30"
-								style={{
-									width: 80 + i * 40,
-									height: 80 + i * 40,
-									left: -(i * 20),
-									top: -(i * 20),
-								}}
-								animate={{
-									opacity: [0.2, 0.5, 0.2],
-									scale: [1, 1.1, 1],
-								}}
-								transition={{
-									duration: 2,
-									delay: i * 0.3,
-									repeat: Infinity,
-									ease: "easeInOut",
-								}}
-							/>
-						))}
-						<motion.div
-							className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center"
-							animate={{ opacity: [0.5, 1, 0.5] }}
-							transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-						>
-							<motion.div
-								className="w-10 h-10 rounded-full bg-primary/30"
-								animate={{ scale: [1, 1.2, 1] }}
-								transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-							/>
-						</motion.div>
+						<div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
+							<div className="w-10 h-10 rounded-full bg-primary/40 animate-pulse" />
+						</div>
 					</div>
 
-					{/* Shimmer text effect */}
 					<motion.div
 						className="text-center space-y-2"
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.3 }}
 					>
-						<motion.p
-							className="text-lg font-medium text-white/80"
-							animate={{ opacity: [0.5, 1, 0.5] }}
-							transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-						>
-							Preparing your session...
-						</motion.p>
-						<p className="text-sm text-white/40">Creating a space for relaxation</p>
+						<p className="text-lg font-medium text-foreground">Preparing your session...</p>
+						<p className="text-sm text-muted-foreground">Creating a space for relaxation</p>
 					</motion.div>
 
-					{/* Skeleton loading bar */}
 					<motion.div
-						className="w-48 h-1 rounded-full bg-white/10 overflow-hidden"
+						className="w-48 h-1 rounded-full bg-muted overflow-hidden"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: 0.5 }}
 					>
 						<motion.div
-							className="h-full bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+							className="h-full bg-primary/50"
 							animate={{ x: ["-100%", "200%"] }}
 							transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
 							style={{ width: "50%" }}
@@ -362,14 +227,9 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		);
 	}
 
-	// Error state with styled design
 	if (error) {
 		return (
-			<div className="h-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-red-950/30 to-slate-900">
-				{/* Subtle floating elements */}
-				<FloatingOrb delay={0} size={150} x={20} y={30} color="primary" />
-				<FloatingOrb delay={2} size={120} x={60} y={50} color="purple" />
-
+			<div className="h-full relative overflow-hidden rounded-xl bg-background">
 				<div className="relative z-10 flex flex-col items-center justify-center h-full space-y-6 p-8">
 					<motion.div
 						initial={{ scale: 0, opacity: 0 }}
@@ -377,10 +237,8 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 						transition={{ type: "spring", duration: 0.5 }}
 						className="relative"
 					>
-						{/* Glow effect behind icon */}
-						<div className="absolute inset-0 rounded-full bg-red-500/20 blur-xl" />
-						<div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 flex items-center justify-center">
-							<AlertCircle className="w-10 h-10 text-red-400" />
+						<div className="w-20 h-20 rounded-full bg-destructive/10 border border-destructive/30 flex items-center justify-center">
+							<AlertCircle className="w-10 h-10 text-destructive" />
 						</div>
 					</motion.div>
 
@@ -390,8 +248,8 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2 }}
 					>
-						<h3 className="text-xl font-semibold text-white/90">Playback Error</h3>
-						<p className="text-sm text-white/50">{error}</p>
+						<h3 className="text-xl font-semibold text-foreground">Playback Error</h3>
+						<p className="text-sm text-muted-foreground">{error}</p>
 					</motion.div>
 
 					<motion.div
@@ -399,11 +257,7 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.4 }}
 					>
-						<Button
-							onClick={() => window.location.reload()}
-							variant="outline"
-							className="bg-white/5 border-white/20 hover:bg-white/10 text-white"
-						>
+						<Button onClick={() => window.location.reload()} variant="outline">
 							<RotateCcw className="w-4 h-4 mr-2" />
 							Try Again
 						</Button>
@@ -413,35 +267,25 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 		);
 	}
 
-	// Main player view
 	return (
-		<div className="h-full relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-purple-950/50 to-slate-900">
-			{/* Ambient floating orbs */}
-			<FloatingOrb delay={0} size={250} x={-5} y={10} color="purple" />
-			<FloatingOrb delay={1.5} size={200} x={70} y={5} color="blue" />
-			<FloatingOrb delay={3} size={180} x={80} y={60} color="indigo" />
-			<FloatingOrb delay={4.5} size={150} x={20} y={70} color="primary" />
-
-			{/* Main content container */}
+		<div className="h-full relative overflow-hidden rounded-xl bg-background">
 			<div className="relative z-10 h-full flex flex-col">
-				{/* Header */}
 				<motion.div
 					className="p-6 text-center"
 					initial={{ opacity: 0, y: -20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.5 }}
 				>
-					<h2 className="text-xl font-semibold text-white/90 tracking-wide">
+					<h2 className="text-xl font-semibold text-foreground tracking-wide">
 						Conditioning Session
 					</h2>
-					<div className="text-sm text-white/40 mt-1">
+					<div className="text-sm text-muted-foreground mt-1">
 						{session.plan.map((step) => (
 							<p key={step.name}>{step.name}</p>
 						))}
 					</div>
 				</motion.div>
 
-				{/* Central Visualization */}
 				<div className="flex-1 flex flex-col items-center justify-center px-6">
 					<motion.div
 						className="relative flex items-center justify-center"
@@ -449,53 +293,15 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 						animate={{ scale: 1, opacity: 1 }}
 						transition={{ duration: 0.6, ease: "easeOut" }}
 					>
-						{/* Outer glow effect */}
-						<AnimatePresence>
-							{isPlaying && (
-								<motion.div
-									className="absolute w-64 h-64 rounded-full bg-primary/10 blur-3xl"
-									initial={{ opacity: 0, scale: 0.8 }}
-									animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.1, 1] }}
-									exit={{ opacity: 0, scale: 0.8 }}
-									transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-								/>
-							)}
-						</AnimatePresence>
-
-						{/* Concentric pulsing rings */}
-						<div className="absolute flex items-center justify-center">
-							<PulsingRing delay={0} size={200} isPlaying={isPlaying} />
-							<PulsingRing delay={0.5} size={240} isPlaying={isPlaying} />
-							<PulsingRing delay={1} size={280} isPlaying={isPlaying} />
-							<PulsingRing delay={1.5} size={320} isPlaying={isPlaying} />
-						</div>
-
-						{/* Main visualization circle */}
-						<motion.div
-							className="relative w-40 h-40 rounded-full bg-gradient-to-br from-primary/30 via-primary/20 to-purple-600/20 border border-primary/30 flex items-center justify-center backdrop-blur-sm"
-							animate={
-								isPlaying
-									? {
-											boxShadow: [
-												"0 0 30px rgba(var(--primary-rgb), 0.2)",
-												"0 0 60px rgba(var(--primary-rgb), 0.4)",
-												"0 0 30px rgba(var(--primary-rgb), 0.2)",
-											],
-										}
-									: {}
-							}
-							transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-						>
-							{/* Inner visualization */}
+						<motion.div className="relative w-40 h-40 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
 							<div className="relative flex items-center justify-center">
 								{isPlaying ? (
 									<>
-										{/* Audio wave visualization bars */}
 										<div className="flex items-center gap-1">
 											{[0, 1, 2, 3, 4].map((i) => (
 												<motion.div
 													key={`wave-bar-${i}`}
-													className="w-2 rounded-full bg-gradient-to-t from-primary to-primary/50"
+													className="w-2 rounded-full bg-primary"
 													animate={{
 														height: [16, 40 + i * 5, 16],
 													}}
@@ -522,7 +328,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 						</motion.div>
 					</motion.div>
 
-					{/* Status text */}
 					<motion.div
 						className="mt-8 text-center space-y-2"
 						initial={{ opacity: 0, y: 20 }}
@@ -532,7 +337,7 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 						<AnimatePresence mode="wait">
 							<motion.p
 								key={isPlaying ? "playing" : "paused"}
-								className="text-2xl font-light text-white/90 tracking-wide"
+								className="text-2xl font-light text-foreground tracking-wide"
 								initial={{ opacity: 0, y: 10 }}
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, y: -10 }}
@@ -541,7 +346,7 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 								{isPlaying ? "Listening..." : "Ready to Begin"}
 							</motion.p>
 						</AnimatePresence>
-						<p className="text-sm text-white/40 max-w-xs">
+						<p className="text-sm text-muted-foreground max-w-xs">
 							{isPlaying
 								? "Breathe deeply and let go of tension"
 								: "Find a comfortable position and relax"}
@@ -549,32 +354,25 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 					</motion.div>
 				</div>
 
-				{/* Frosted glass controls area */}
 				<motion.div
-					className="backdrop-blur-xl bg-white/5 border-t border-white/10 p-6 space-y-5"
+					className="border-t border-border bg-muted/30 p-6 space-y-5"
 					initial={{ opacity: 0, y: 40 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ delay: 0.4, duration: 0.5 }}
 				>
-					{/* Progress Bar */}
 					<div className="space-y-3">
-						<div className="relative h-2 rounded-full bg-white/10 overflow-hidden group cursor-pointer">
-							{/* Progress fill with gradient */}
+						<div className="relative h-2 rounded-full bg-muted overflow-hidden group cursor-pointer">
 							<motion.div
-								className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary to-purple-500 rounded-full"
+								className="absolute inset-y-0 left-0 bg-primary rounded-full"
 								style={{ width: `${progress}%` }}
 								transition={{ duration: 0.1 }}
 							/>
-							{/* Glowing thumb indicator */}
 							<motion.div
-								className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-lg shadow-primary/50"
+								className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-background border-2 border-primary shadow-sm"
 								style={{ left: `calc(${progress}% - 8px)` }}
 								whileHover={{ scale: 1.2 }}
 								transition={{ duration: 0.1 }}
-							>
-								<div className="absolute inset-0 rounded-full bg-primary/50 blur-sm" />
-							</motion.div>
-							{/* Invisible range input for interaction */}
+							/>
 							<input
 								type="range"
 								min={0}
@@ -586,21 +384,20 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							/>
 						</div>
 
-						{/* Time display */}
 						<div className="flex justify-between text-sm">
-							<span className="font-mono text-white/70 tabular-nums">
+							<span className="font-mono text-foreground tabular-nums">
 								{formatTime(currentTime)}
 							</span>
-							<span className="font-mono text-white/40 tabular-nums">{formatTime(duration)}</span>
+							<span className="font-mono text-muted-foreground tabular-nums">
+								{formatTime(duration)}
+							</span>
 						</div>
 					</div>
 
-					{/* Main Controls */}
 					<div className="flex items-center justify-center gap-3">
-						{/* Skip back button */}
 						<motion.button
 							onClick={() => skip(-10)}
-							className="relative h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+							className="relative h-12 w-12 rounded-full bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							title="Skip back 10s"
@@ -608,10 +405,9 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							<SkipBack className="h-5 w-5" />
 						</motion.button>
 
-						{/* Restart button */}
 						<motion.button
 							onClick={restart}
-							className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+							className="h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							title="Restart"
@@ -619,7 +415,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							<RotateCcw className="h-4 w-4" />
 						</motion.button>
 
-						{/* Main play/pause button */}
 						<motion.button
 							onClick={togglePlay}
 							className="relative h-20 w-20 rounded-full flex items-center justify-center"
@@ -627,10 +422,6 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							whileTap={{ scale: 0.95 }}
 							title={isPlaying ? "Pause" : "Play"}
 						>
-							{/* Glow effect */}
-							<div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-purple-600 opacity-80 blur-md" />
-
-							{/* Pulsing ring when playing */}
 							<AnimatePresence>
 								{isPlaying && (
 									<motion.div
@@ -643,8 +434,7 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 								)}
 							</AnimatePresence>
 
-							{/* Button surface */}
-							<div className="relative w-full h-full rounded-full bg-gradient-to-br from-primary via-primary to-purple-600 border border-white/20 flex items-center justify-center shadow-2xl shadow-primary/30">
+							<div className="relative w-full h-full rounded-full bg-primary border border-primary/20 flex items-center justify-center">
 								<AnimatePresence mode="wait">
 									<motion.div
 										key={isPlaying ? "pause" : "play"}
@@ -654,19 +444,18 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 										transition={{ duration: 0.15 }}
 									>
 										{isPlaying ? (
-											<Pause className="h-8 w-8 text-white" />
+											<Pause className="h-8 w-8 text-primary-foreground" />
 										) : (
-											<Play className="h-8 w-8 text-white ml-1" />
+											<Play className="h-8 w-8 text-primary-foreground ml-1" />
 										)}
 									</motion.div>
 								</AnimatePresence>
 							</div>
 						</motion.button>
 
-						{/* Skip forward button */}
 						<motion.button
 							onClick={() => skip(10)}
-							className="h-12 w-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+							className="h-12 w-12 rounded-full bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							title="Skip forward 10s"
@@ -674,27 +463,24 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							<SkipForward className="h-5 w-5" />
 						</motion.button>
 
-						{/* Playback speed button */}
 						<motion.button
 							onClick={changePlaybackRate}
-							className="relative h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors group"
+							className="relative h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors group"
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 							title={`Speed: ${playbackRate}x`}
 						>
 							<span className="text-xs font-semibold">{playbackRate}x</span>
-							{/* Tooltip */}
-							<div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+							<div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-popover text-popover-foreground text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
 								Playback Speed
 							</div>
 						</motion.button>
 					</div>
 
-					{/* Volume Control */}
 					<div className="flex items-center justify-center gap-3">
 						<motion.button
 							onClick={toggleMute}
-							className="h-9 w-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+							className="h-9 w-9 rounded-full bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
 							whileHover={{ scale: 1.05 }}
 							whileTap={{ scale: 0.95 }}
 						>
@@ -705,20 +491,16 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							)}
 						</motion.button>
 
-						{/* Custom volume slider */}
-						<div className="relative w-32 h-2 rounded-full bg-white/10 overflow-hidden group">
-							{/* Volume fill */}
+						<div className="relative w-32 h-2 rounded-full bg-muted overflow-hidden group">
 							<motion.div
-								className="absolute inset-y-0 left-0 bg-gradient-to-r from-white/50 to-white/70 rounded-full"
+								className="absolute inset-y-0 left-0 bg-foreground/30 rounded-full"
 								style={{ width: `${isMuted ? 0 : volume * 100}%` }}
 								transition={{ duration: 0.1 }}
 							/>
-							{/* Slider knob */}
 							<motion.div
-								className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+								className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-background border border-foreground/30 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
 								style={{ left: `calc(${isMuted ? 0 : volume * 100}% - 6px)` }}
 							/>
-							{/* Invisible range input */}
 							<input
 								type="range"
 								min={0}
@@ -730,8 +512,7 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 							/>
 						</div>
 
-						{/* Volume percentage */}
-						<span className="text-xs text-white/40 w-8 text-right font-mono tabular-nums">
+						<span className="text-xs text-muted-foreground w-8 text-right font-mono tabular-nums">
 							{Math.round(isMuted ? 0 : volume * 100)}%
 						</span>
 					</div>

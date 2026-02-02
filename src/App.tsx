@@ -23,24 +23,6 @@ import {
 function Layout() {
 	return (
 		<main className="h-screen flex flex-col overflow-hidden bg-background relative">
-			{/* Decorative gradient orb */}
-			<div
-				className="absolute top-0 right-0 w-96 h-96 pointer-events-none"
-				style={{
-					background:
-						"radial-gradient(circle at center, rgba(139, 92, 246, 0.08) 0%, transparent 70%)",
-					transform: "translate(30%, -30%)",
-				}}
-			/>
-			<div
-				className="absolute bottom-0 left-0 w-80 h-80 pointer-events-none"
-				style={{
-					background:
-						"radial-gradient(circle at center, rgba(59, 130, 246, 0.06) 0%, transparent 70%)",
-					transform: "translate(-30%, 30%)",
-				}}
-			/>
-
 			{/* Main content area */}
 			<motion.div
 				className="flex-1 min-h-0 overflow-hidden relative z-0"

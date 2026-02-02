@@ -8,7 +8,7 @@ interface Profile {
 	profile: UserProfile | undefined;
 	setProfile: (profile: UserProfile) => void;
 	updateProfile: (updates: Partial<UserProfile>) => void;
-	updatePlan: (feature: "hypno" | "challenges" | "user" | "interview", content: string) => void;
+	updatePlan: (feature: "hypno" | "challenges" | "user" | "interview"|"coach", content: string) => void;
 	getProfile: () => UserProfile | undefined;
 }
 

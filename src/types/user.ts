@@ -31,8 +31,9 @@ export type UserProfile = {
 
 export type ConditioningPlan = {
 	hypno: string;
-	challenges?: string;
-	user: string;
+	challenges: string;
+  user: string;
+  coach: string;
 	interview: string;
 };
 

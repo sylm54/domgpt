@@ -11,6 +11,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
+import { useGetPromptHistoryData } from "@/data/history";
 import { useAddInfo } from "@/data/info";
 import { useProfileStore } from "@/data/profile";
 import { useSettingsStore } from "@/data/settings";
@@ -23,7 +24,6 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Chat } from "../ui/shadcn-io/ai/chat";
-import { useGetPromptHistoryData } from "@/data/history";
 
 interface CoachChatProps {
 	model: Model;
@@ -54,21 +54,19 @@ function ToolActionCard({
 			transition={{ duration: 0.3, ease: "easeOut" }}
 			className={cn(
 				"flex items-center gap-3 px-4 py-3 rounded-xl",
-				"bg-gradient-to-r from-background/80 to-background/40",
-				"backdrop-blur-sm border-l-4",
+				"bg-muted/30",
+				"border-l-4",
 				"shadow-sm hover:shadow-md transition-shadow duration-200",
 				borderColor
 			)}
 		>
-			<div
-				className={cn("p-2 rounded-lg bg-gradient-to-br from-background to-muted/50", iconColor)}
-			>
+			<div className={cn("p-2 rounded-lg bg-muted/50", iconColor)}>
 				<Icon className="w-4 h-4" />
 			</div>
 			<span className="text-sm text-muted-foreground font-medium">{label}</span>
 			<Badge
 				variant="secondary"
-				className={cn("font-semibold text-white shadow-sm", "bg-gradient-to-r", badgeClassName)}
+				className={cn("font-semibold text-white shadow-sm", badgeClassName)}
 			>
 				{badge}
 			</Badge>
@@ -90,7 +88,7 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 		if (profile) return;
 		setProfile({
 			goal: "",
-			plan: { hypno: "", challenges: "", user: "", interview: "" },
+			plan: { hypno: "", challenges: "", user: "", interview: "",coach:"" },
 			profile: "",
 			created_at: new Date(),
 		});
@@ -143,7 +141,7 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 				description: "Set a specific feature's plan",
 				schema: {
 					feature: z
-						.enum(["hypno", "challenges", "user", "interview"])
+						.enum(["hypno", "challenges", "user", "interview", "coach"])
 						.describe("The feature name)"),
 					plan: z.string().describe("The plan description for the feature"),
 				},
@@ -249,9 +247,7 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								<Sparkles className="w-5 h-5 text-pink-400" />
 							</div>
 						</div>
-						<span className="text-muted-foreground font-medium bg-gradient-to-r from-pink-400 to-fuchsia-400 bg-clip-text text-transparent">
-							Loading Coach...
-						</span>
+						<span className="text-muted-foreground font-medium">Loading Coach...</span>
 					</motion.div>
 				</CardContent>
 			</Card>
@@ -260,25 +256,13 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 
 	if (!agent) {
 		return (
-			<Card
-				className={cn(
-					"h-full relative overflow-hidden",
-					"bg-gradient-to-br from-background/95 via-background/90 to-pink-950/20",
-					"backdrop-blur-xl border-pink-500/20",
-					"shadow-[0_8px_32px_rgba(236,72,153,0.15)]"
-				)}
-			>
-				{/* Decorative corner accents */}
-				<div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-pink-500/20 to-transparent rounded-br-full" />
-				<div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-magenta-500/15 to-transparent rounded-tl-full" />
-
+			<Card className="h-full border-pink-200">
 				<CardContent className="flex items-center justify-center h-full">
 					<motion.div
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						className="flex flex-col items-center gap-4"
 					>
-						{/* Refined spinner */}
 						<div className="relative">
 							<motion.div
 								animate={{ rotate: 360 }}
@@ -286,12 +270,10 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								className="w-12 h-12 rounded-full border-2 border-pink-500/30 border-t-pink-500"
 							/>
 							<div className="absolute inset-0 flex items-center justify-center">
-								<Sparkles className="w-5 h-5 text-pink-400" />
+								<Sparkles className="w-5 h-5 text-pink-500" />
 							</div>
 						</div>
-						<span className="text-muted-foreground font-medium bg-gradient-to-r from-pink-400 to-fuchsia-400 bg-clip-text text-transparent">
-							Initializing Coach...
-						</span>
+						<span className="text-muted-foreground font-medium">Initializing Coach...</span>
 					</motion.div>
 				</CardContent>
 			</Card>
@@ -299,32 +281,17 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 	}
 
 	return (
-		<Card
-			className={cn(
-				"h-full flex flex-col relative overflow-hidden",
-				"bg-gradient-to-br from-background/95 via-background/90 to-pink-950/20",
-				"backdrop-blur-xl border-pink-500/20",
-				"shadow-[0_8px_32px_rgba(236,72,153,0.15)]"
-			)}
-		>
-			{/* Decorative corner accents */}
-			<div className="absolute top-0 left-0 w-24 h-24 bg-gradient-to-br from-pink-500/20 to-transparent rounded-br-full pointer-events-none" />
-			<div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-fuchsia-500/15 to-transparent rounded-tl-full pointer-events-none" />
-
-			<CardHeader className="relative pb-4">
+		<Card className="h-full flex flex-col border-pink-200">
+			<CardHeader className="pb-4 border-b border-pink-100">
 				<CardTitle className="flex items-center gap-3">
-					{/* Status indicator with glow ring */}
 					<div className="relative">
 						<span className="absolute inset-0 w-3 h-3 bg-emerald-400 rounded-full animate-ping opacity-40" />
-						<span className="relative block w-3 h-3 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+						<span className="relative block w-3 h-3 bg-emerald-500 rounded-full" />
 					</div>
-					{/* Improved title typography */}
-					<span className="text-lg font-semibold tracking-tight bg-gradient-to-r from-foreground via-pink-200 to-foreground bg-clip-text">
+					<span className="text-lg font-semibold tracking-tight">
 						{isOnboarding ? "Coach — Discovery" : "Coach Session"}
 					</span>
 				</CardTitle>
-				{/* Gradient accent line under header */}
-				<div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-pink-500/50 to-transparent" />
 			</CardHeader>
 
 			<CardContent className="flex-1 p-0 min-h-0 relative">
@@ -341,13 +308,11 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								return (
 									<ToolActionCard
 										icon={Database}
-										iconColor={isProfile ? "text-blue-400" : "text-violet-400"}
+										iconColor={isProfile ? "text-blue-500" : "text-pink-500"}
 										label="Updated"
 										badge={isProfile ? "Profile" : "Goal"}
-										badgeClassName={
-											isProfile ? "from-blue-500 to-blue-600" : "from-violet-500 to-purple-600"
-										}
-										borderColor={isProfile ? "border-l-blue-500" : "border-l-violet-500"}
+										badgeClassName={isProfile ? "bg-blue-500" : "bg-pink-500"}
+										borderColor={isProfile ? "border-l-blue-500" : "border-l-pink-500"}
 									/>
 								);
 							}
@@ -357,38 +322,38 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								const feature = input.feature;
 								const featureConfig: Record<
 									string,
-									{ label: string; gradient: string; border: string; iconColor: string }
+									{ label: string; bg: string; border: string; iconColor: string }
 								> = {
 									hypno: {
 										label: "Hypnosis",
-										gradient: "from-pink-500 to-rose-600",
+										bg: "bg-pink-500",
 										border: "border-l-pink-500",
-										iconColor: "text-pink-400",
+										iconColor: "text-pink-500",
 									},
 									challenges: {
 										label: "Challenges",
-										gradient: "from-orange-500 to-amber-600",
+										bg: "bg-orange-500",
 										border: "border-l-orange-500",
-										iconColor: "text-orange-400",
+										iconColor: "text-orange-500",
 									},
 									user: {
 										label: "User Profile",
-										gradient: "from-emerald-500 to-green-600",
+										bg: "bg-emerald-500",
 										border: "border-l-emerald-500",
-										iconColor: "text-emerald-400",
+										iconColor: "text-emerald-500",
 									},
 									interview: {
 										label: "Interview",
-										gradient: "from-teal-500 to-cyan-600",
+										bg: "bg-teal-500",
 										border: "border-l-teal-500",
-										iconColor: "text-teal-400",
+										iconColor: "text-teal-500",
 									},
 								};
 								const config = featureConfig[feature] || {
 									label: feature,
-									gradient: "from-gray-500 to-gray-600",
+									bg: "bg-gray-500",
 									border: "border-l-gray-500",
-									iconColor: "text-gray-400",
+									iconColor: "text-gray-500",
 								};
 
 								return (
@@ -397,7 +362,7 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 										iconColor={config.iconColor}
 										label="Set plan for"
 										badge={config.label}
-										badgeClassName={config.gradient}
+										badgeClassName={config.bg}
 										borderColor={config.border}
 									/>
 								);
@@ -412,12 +377,12 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 										transition={{ duration: 0.3, ease: "easeOut" }}
 										className={cn(
 											"flex items-center gap-3 px-4 py-3 rounded-xl",
-											"bg-gradient-to-r from-background/80 to-background/40",
-											"backdrop-blur-sm border-l-4 border-l-cyan-500",
+											"bg-muted/30",
+											"border-l-4 border-l-cyan-500",
 											"shadow-sm"
 										)}
 									>
-										<div className="p-2 rounded-lg bg-gradient-to-br from-background to-muted/50 text-cyan-400">
+										<div className="p-2 rounded-lg bg-muted/50 text-cyan-500">
 											<RefreshCw className="w-4 h-4" />
 										</div>
 										<span className="text-sm text-muted-foreground font-medium">
@@ -425,7 +390,7 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 										</span>
 										<Badge
 											variant="outline"
-											className="text-cyan-400 border-cyan-500/50 bg-cyan-500/10 font-semibold"
+											className="text-cyan-500 border-cyan-500/50 font-semibold"
 										>
 											<Info className="w-3 h-3 mr-1.5" />
 											View
@@ -443,18 +408,18 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 										transition={{ duration: 0.3, ease: "easeOut" }}
 										className={cn(
 											"flex items-center gap-3 px-4 py-3 rounded-xl",
-											"bg-gradient-to-r from-emerald-500/10 to-green-500/5",
-											"backdrop-blur-sm border-l-4 border-l-emerald-500",
+											"bg-emerald-500/10",
+											"border-l-4 border-l-emerald-500",
 											"shadow-sm"
 										)}
 									>
-										<div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/10 text-emerald-400">
+										<div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-500">
 											<CheckCircle2 className="w-4 h-4" />
 										</div>
 										<span className="text-sm text-muted-foreground font-medium">
 											Marked coaching as
 										</span>
-										<Badge className="font-semibold text-white shadow-sm bg-gradient-to-r from-emerald-500 to-green-600">
+										<Badge className="font-semibold text-white shadow-sm bg-emerald-500">
 											Complete
 										</Badge>
 									</motion.div>
@@ -466,10 +431,10 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								return (
 									<ToolActionCard
 										icon={Database}
-										iconColor="text-blue-400"
+										iconColor="text-blue-500"
 										label="Updated"
 										badge={input.aspect}
-										badgeClassName="from-blue-500 to-blue-600"
+										badgeClassName="bg-blue-500"
 										borderColor="border-l-blue-500"
 									/>
 								);
@@ -479,10 +444,10 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								return (
 									<ToolActionCard
 										icon={FileText}
-										iconColor="text-orange-400"
+										iconColor="text-orange-500"
 										label="Set plan for"
 										badge={input.feature}
-										badgeClassName="from-orange-500 to-amber-600"
+										badgeClassName="bg-orange-500"
 										borderColor="border-l-orange-500"
 									/>
 								);
@@ -496,12 +461,12 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 									transition={{ duration: 0.3, ease: "easeOut" }}
 									className={cn(
 										"flex items-center gap-3 px-4 py-3 rounded-xl",
-										"bg-gradient-to-r from-background/80 to-background/40",
-										"backdrop-blur-sm border-l-4 border-l-gray-500",
+										"bg-muted/30",
+										"border-l-4 border-l-gray-500",
 										"shadow-sm"
 									)}
 								>
-									<div className="p-2 rounded-lg bg-gradient-to-br from-background to-muted/50 text-gray-400">
+									<div className="p-2 rounded-lg bg-muted/50 text-gray-500">
 										<PlayCircle className="w-4 h-4" />
 									</div>
 									<span className="text-sm text-muted-foreground font-medium">Executed tool:</span>
@@ -519,12 +484,12 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 									transition={{ duration: 0.3, ease: "easeOut" }}
 									className={cn(
 										"flex items-center gap-3 px-4 py-3 rounded-xl",
-										"bg-gradient-to-r from-red-500/10 to-rose-500/5",
-										"backdrop-blur-sm border-l-4 border-l-red-500",
+										"bg-red-500/10",
+										"border-l-4 border-l-red-500",
 										"shadow-sm"
 									)}
 								>
-									<div className="p-2 rounded-lg bg-gradient-to-br from-red-500/20 to-rose-500/10 text-red-400">
+									<div className="p-2 rounded-lg bg-red-500/20 text-red-500">
 										<AlertCircle className="w-4 h-4" />
 									</div>
 									<span className="text-sm text-muted-foreground font-medium">
@@ -546,7 +511,6 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 					className="h-full"
 				/>
 
-				{/* Complete Onboarding Button with gradient and glow */}
 				<AnimatePresence>
 					{showCompleteButton && isOnboarding && onOnboardingComplete && (
 						<motion.div
@@ -558,20 +522,9 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 						>
 							<Button
 								onClick={onOnboardingComplete}
-								className={cn(
-									"w-full relative overflow-hidden",
-									"bg-gradient-to-r from-pink-500 via-fuchsia-500 to-pink-500",
-									"hover:from-pink-400 hover:via-fuchsia-400 hover:to-pink-400",
-									"text-white font-semibold tracking-wide",
-									"shadow-[0_4px_20px_rgba(236,72,153,0.4)]",
-									"hover:shadow-[0_6px_30px_rgba(236,72,153,0.6)]",
-									"transition-all duration-300",
-									"border border-pink-400/30"
-								)}
+								className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold"
 								size="lg"
 							>
-								{/* Shimmer effect */}
-								<span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
 								<Sparkles className="w-5 h-5 mr-2" />
 								Complete Onboarding
 							</Button>
