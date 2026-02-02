@@ -6,9 +6,9 @@ import {
 	MessageSquare,
 	Play,
 	RefreshCw,
+	Settings,
 	Sparkles,
 	Target,
-	Trophy,
 	Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -20,7 +20,6 @@ import { HistoryTimeline } from "@/components/history/HistoryTimeline";
 import { useGetHistoryData } from "@/data/history";
 import { useLatestHypnoFile } from "@/data/hypno";
 import { useProfileStore } from "@/data/profile";
-import { useResetDatabase } from "@/data/surreal";
 import type { HistoryItem } from "@/types/user";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -34,7 +33,6 @@ export function setOnboardingCompleted(completed: boolean) {
 }
 
 export function Dashboard() {
-	const resetDatabase = useResetDatabase();
 	const { profile } = useProfileStore();
 	const navigate = useNavigate();
 	const getHistory = useGetHistoryData();
@@ -510,16 +508,11 @@ export function Dashboard() {
 								icon: <Activity className="h-6 w-6" />,
 							},
 							{
-								onClick: () => {
-									resetDatabase().then(() => {
-										setOnboardingCompleted(false);
-										navigate("/onboarding");
-									});
-								},
-								title: "Reset All Data",
-								description: "Start fresh with a new onboarding experience",
-								variant: "destructive" as const,
-								icon: <Trophy className="h-6 w-6" />,
+								onClick: () => navigate("/settings"),
+								title: "Settings",
+								description: "Configure your preferences and manage data",
+								variant: "outline" as const,
+								icon: <Settings className="h-6 w-6" />,
 							},
 						].map((action, index) => (
 							<motion.div

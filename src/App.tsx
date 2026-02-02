@@ -16,6 +16,7 @@ import {
 	HypnoPlayPage,
 	OnboardingPage,
 	ReflectionPage,
+	SettingsPage,
 } from "./pages";
 
 // Layout component
@@ -58,6 +59,7 @@ export const router = createMemoryRouter(
 		<Route path="/" element={<Layout />}>
 			<Route index element={<Dashboard />} />
 			<Route path="onboarding" element={<OnboardingPage />} />
+			<Route path="settings" element={<SettingsPage />} />
 			<Route path="coach" element={<CoachPage />} />
 			<Route path="challenges" element={<ChallengesPage />} />
 			<Route path="reflection" element={<ReflectionPage />} />
