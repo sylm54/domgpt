@@ -167,7 +167,7 @@ export class OpenRouterModel extends Model {
 				);
 			}
 			console.groupEnd();
-			console.log("options", options);
+			console.log(this.modelname, options);
 			if (!this.router) {
 				throw new Error("OpenRouterModel router not set");
 			}
@@ -247,7 +247,7 @@ export class OpenRouterModel extends Model {
 				console.log(t.name, t);
 			}
 			console.groupEnd();
-			console.log("options", options);
+			console.log(this.modelname, options);
 			if (!this.router) {
 				throw new Error("OpenRouterModel router not set");
 			}

@@ -17,6 +17,8 @@ import {
 	OnboardingPage,
 	ReflectionPage,
 	SettingsPage,
+	SubliminalNewPage,
+	SubliminalPlayPage,
 } from "./pages";
 
 // Layout component
@@ -47,6 +49,8 @@ export const router = createMemoryRouter(
 			<Route path="reflection" element={<ReflectionPage />} />
 			<Route path="hypno/new" element={<HypnoNewPage />} />
 			<Route path="hypno/play/:sessionId" element={<HypnoPlayPage />} />
+			<Route path="subliminal/new" element={<SubliminalNewPage />} />
+			<Route path="subliminal/play/:sessionId" element={<SubliminalPlayPage />} />
 		</Route>
 	),
 	{

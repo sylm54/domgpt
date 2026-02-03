@@ -6,3 +6,5 @@ export { HypnoPlayPage } from "./HypnoPlayPage";
 export { OnboardingPage } from "./OnboardingPage";
 export { ReflectionPage } from "./ReflectionPage";
 export { SettingsPage } from "./SettingsPage";
+export { SubliminalNewPage } from "./SubliminalNewPage";
+export { SubliminalPlayPage } from "./SubliminalPlayPage";

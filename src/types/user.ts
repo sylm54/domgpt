@@ -128,6 +128,15 @@ export type HypnoFile = {
 	created_at: Date;
 };
 
+export type SubliminalFile = {
+	id?: RecordId;
+	subliminal_file: string;
+	plan: HypnoPlan;
+	script: string;
+	duration_seconds: number;
+	created_at: Date;
+};
+
 export type Challenge = {
 	id?: RecordId;
 	description: string;

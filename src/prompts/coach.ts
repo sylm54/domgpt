@@ -41,7 +41,7 @@ Your role is to conduct coaching sessions to review progress and adjust the plan
 Make sure to coordinate these features effectively to maximize the user's conditioning experience.
 
 ${
-	profile.plan.coach !== "" || profile.plan.coach !== undefined
+	profile !== undefined && profile.plan.coach !== "" && profile.plan.coach !== undefined
 		? `## Your Memory from last session:
 ${profile.plan.coach}`
 		: ""

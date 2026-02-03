@@ -6,6 +6,7 @@ import {
 	MessageSquare,
 	Play,
 	RefreshCw,
+	Repeat,
 	Settings,
 	Sparkles,
 	Target,
@@ -20,6 +21,7 @@ import { HistoryTimeline } from "@/components/history/HistoryTimeline";
 import { useGetHistoryData } from "@/data/history";
 import { useLatestHypnoFile } from "@/data/hypno";
 import { useProfileStore } from "@/data/profile";
+import { useLatestSubliminalFile } from "@/data/subliminal";
 import type { HistoryItem } from "@/types/user";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -39,7 +41,9 @@ export function Dashboard() {
 	const [history, setHistory] = useState<HistoryItem[]>([]);
 	const [loadingHistory, setLoadingHistory] = useState(true);
 	const [loadingHypno, setLoadingHypno] = useState(true);
+	const [loadingSubliminal, setLoadingSubliminal] = useState(true);
 	const hypno = useLatestHypnoFile();
+	const subliminal = useLatestSubliminalFile();
 
 	// Calculate statistics from history data
 	const stats = useMemo(
@@ -77,6 +81,12 @@ export function Dashboard() {
 			setLoadingHypno(false);
 		}
 	}, [hypno]);
+
+	useEffect(() => {
+		if (subliminal !== undefined) {
+			setLoadingSubliminal(false);
+		}
+	}, [subliminal]);
 
 	if (!isOnboardingCompleted()) {
 		return (
@@ -310,6 +320,65 @@ export function Dashboard() {
 											>
 												<RefreshCw className="h-5 w-5 mr-2" />
 												{hypno ? "Regenerate" : "Generate New"}
+											</Button>
+										</motion.div>
+									</div>
+								</div>
+							</CardContent>
+						</Card>
+					</motion.div>
+
+					{/* Subliminal Feature Card - Full Width */}
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.3 }}
+						className="mb-6"
+					>
+						<Card className="border border-primary/20 rounded-2xl bg-background">
+							<CardContent className="p-6 md:p-8">
+								<div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+									<div className="p-4 rounded-2xl bg-primary/10">
+										<Repeat className="h-10 w-10 text-primary" />
+									</div>
+
+									<div className="flex-1">
+										<h3 className="text-2xl font-bold mb-2 text-foreground">Subliminal Session</h3>
+										<p className="text-muted-foreground max-w-lg">
+											{subliminal
+												? "Continue your loopable subliminal or generate a new one."
+												: "Generate a loopable subliminal for sleep or background listening."}
+										</p>
+									</div>
+
+									<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+										{loadingSubliminal ? (
+											<motion.div
+												animate={{ rotate: 360 }}
+												transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+												className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full"
+											/>
+										) : subliminal ? (
+											<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+												<Button
+													size="lg"
+													onClick={() => navigate(`/subliminal/play/${subliminal.id.id}`)}
+													className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6"
+												>
+													<Play className="h-5 w-5 mr-2" />
+													Play
+												</Button>
+											</motion.div>
+										) : null}
+										<motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+											<Button
+												size="lg"
+												variant="outline"
+												onClick={() => navigate("/subliminal/new")}
+												className="border-primary/30 hover:border-primary/60 hover:bg-primary/5 font-semibold px-6"
+											>
+												<RefreshCw className="h-5 w-5 mr-2" />
+												{subliminal ? "Regenerate" : "Generate New"}
 											</Button>
 										</motion.div>
 									</div>
