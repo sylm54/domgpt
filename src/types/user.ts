@@ -109,10 +109,47 @@ export type Question =
 			answer: string;
 	  };
 
-export type Reflection = {
+export type ThoughtAnalysis = {
+	thought: string;
+	is_conducive: boolean;
+	reframed?: string;
+};
+
+export type ReflectionSummary = {
+	conducive_thoughts: string[];
+	not_conducive_thoughts: string[];
+	key_insights: string;
+	conversation_summary: string;
+};
+
+// Legacy reflection format with questionnaire
+export type LegacyReflection = {
 	questions: Question[];
 	created_at: string;
 };
+
+// New socratic reflection format
+export type SocraticReflection = {
+	conversation: {
+		role: "user" | "assistant";
+		content: string;
+	}[];
+	thought_analysis: ThoughtAnalysis[];
+	summary: ReflectionSummary;
+	created_at: string;
+};
+
+// Combined reflection type
+export type Reflection = LegacyReflection | SocraticReflection;
+
+// Type guards
+export function isLegacyReflection(reflection: Reflection): reflection is LegacyReflection {
+	return "questions" in reflection;
+}
+
+export function isSocraticReflection(reflection: Reflection): reflection is SocraticReflection {
+	return "conversation" in reflection;
+}
 
 export type HypnoPlan = {
 	name: string;

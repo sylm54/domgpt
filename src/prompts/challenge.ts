@@ -18,7 +18,7 @@ ${profile.plan.challenges || profile.plan.hypno}
 ## Requirements for Challenges:
 - Each challenge should be a specific, actionable task that can be performed in real life
 - Challenges should be realistic and appropriate for the user's experience level
-- Mix difficulty levels: start with easier tasks, include moderate challenges
+- Mix difficulty levels: mostly easier tasks, some challenges
 - Each challenge should be 1-2 sentences maximum
 - Challenges should be clear and unambiguous
 - Focus on real-world behavioral changes aligned with the conditioning goal

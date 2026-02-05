@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { HistoryItem } from "@/types/user";
+import { isLegacyReflection, isSocraticReflection } from "@/types/user";
 
 interface HistoryTimelineProps {
 	history: HistoryItem[];
@@ -218,58 +219,124 @@ function TimelineItem({
 								<div className="pt-4 mt-3 border-t space-y-4 border-pink-500/20">
 									{isSession ? (
 										<>
-											{item.debrief?.questions.map((q, idx) => (
+											{item.debrief &&
+												isLegacyReflection(item.debrief) &&
+												item.debrief.questions.map((q, idx) => (
+													<motion.div
+														key={`${item.id?.toString() || index}-debrief-${idx}`}
+														initial={{ opacity: 0, y: 10 }}
+														animate={{ opacity: 1, y: 0 }}
+														transition={{ delay: idx * 0.05 }}
+														className="space-y-2"
+													>
+														<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
+															<span className="w-1 h-1 rounded-full bg-pink-400" />
+															{q.question}
+														</p>
+														{q.type === "rating" ? (
+															<div className="pl-3">
+																<RatingDisplay rating={Number(q.answer)} />
+															</div>
+														) : (
+															<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
+																<p className="text-xs text-muted-foreground italic">
+																	"{q.answer as string}"
+																</p>
+															</div>
+														)}
+													</motion.div>
+												))}
+											{item.debrief && isSocraticReflection(item.debrief) && (
 												<motion.div
-													key={`${item.id?.toString() || index}-debrief-${idx}`}
 													initial={{ opacity: 0, y: 10 }}
 													animate={{ opacity: 1, y: 0 }}
-													transition={{ delay: idx * 0.05 }}
-													className="space-y-2"
+													className="space-y-3"
 												>
-													<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
-														<span className="w-1 h-1 rounded-full bg-pink-400" />
-														{q.question}
-													</p>
-													{q.type === "rating" ? (
-														<div className="pl-3">
-															<RatingDisplay rating={Number(q.answer)} />
-														</div>
-													) : (
-														<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
-															<p className="text-xs text-muted-foreground italic">
-																"{q.answer as string}"
-															</p>
-														</div>
-													)}
-												</motion.div>
-											))}
-										</>
-									) : (
-										item.reflection.questions.map((q, idx) => (
-											<motion.div
-												key={`${item.id?.toString() || index}-reflection-${idx}`}
-												initial={{ opacity: 0, y: 10 }}
-												animate={{ opacity: 1, y: 0 }}
-												transition={{ delay: idx * 0.05 }}
-												className="space-y-2"
-											>
-												<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
-													<span className="w-1 h-1 rounded-full bg-pink-400" />
-													{q.question}
-												</p>
-												{q.type === "rating" ? (
-													<div className="pl-3">
-														<RatingDisplay rating={Number(q.answer)} />
-													</div>
-												) : (
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
-														<p className="text-xs text-muted-foreground italic">
-															"{q.answer as string}"
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500/5 to-transparent border-l-2 border-emerald-500/40">
+														<p className="text-xs font-medium text-emerald-600 mb-1">Conducive:</p>
+														<p className="text-xs text-muted-foreground">
+															{item.debrief.summary.conducive_thoughts.join("; ")}
 														</p>
 													</div>
-												)}
-											</motion.div>
-										))
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-rose-500/5 to-transparent border-l-2 border-rose-500/40">
+														<p className="text-xs font-medium text-rose-600 mb-1">Not Conducive:</p>
+														<p className="text-xs text-muted-foreground">
+															{item.debrief.summary.not_conducive_thoughts.join("; ")}
+														</p>
+													</div>
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/5 to-transparent border-l-2 border-amber-500/40">
+														<p className="text-xs font-medium text-amber-600 mb-1">Key Insights:</p>
+														<p className="text-xs text-muted-foreground italic">
+															"{item.debrief.summary.key_insights}"
+														</p>
+													</div>
+												</motion.div>
+											)}
+										</>
+									) : (
+										<>
+											{isLegacyReflection(item.reflection) &&
+												item.reflection.questions.map((q, idx) => (
+													<motion.div
+														key={`${item.id?.toString() || index}-reflection-${idx}`}
+														initial={{ opacity: 0, y: 10 }}
+														animate={{ opacity: 1, y: 0 }}
+														transition={{ delay: idx * 0.05 }}
+														className="space-y-2"
+													>
+														<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
+															<span className="w-1 h-1 rounded-full bg-pink-400" />
+															{q.question}
+														</p>
+														{q.type === "rating" ? (
+															<div className="pl-3">
+																<RatingDisplay rating={Number(q.answer)} />
+															</div>
+														) : (
+															<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
+																<p className="text-xs text-muted-foreground italic">
+																	"{q.answer as string}"
+																</p>
+															</div>
+														)}
+													</motion.div>
+												))}
+											{isSocraticReflection(item.reflection) && (
+												<motion.div
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													className="space-y-3"
+												>
+													<p className="text-xs text-muted-foreground italic mb-2">
+														{item.reflection.summary.conversation_summary}
+													</p>
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500/5 to-transparent border-l-2 border-emerald-500/40">
+														<p className="text-xs font-medium text-emerald-600 mb-1">
+															Conducive Thoughts (
+															{item.reflection.summary.conducive_thoughts.length})
+														</p>
+														<p className="text-xs text-muted-foreground">
+															{item.reflection.summary.conducive_thoughts.join("; ")}
+														</p>
+													</div>
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-rose-500/5 to-transparent border-l-2 border-rose-500/40">
+														<p className="text-xs font-medium text-rose-600 mb-1">
+															Not Conducive ({item.reflection.summary.not_conducive_thoughts.length}
+															)
+														</p>
+														<p className="text-xs text-muted-foreground">
+															{item.reflection.summary.not_conducive_thoughts.join("; ")}
+														</p>
+													</div>
+													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/5 to-transparent border-l-2 border-amber-500/40">
+														<p className="text-xs font-medium text-amber-600 mb-1">Key Insights:</p>
+														<p className="text-xs text-muted-foreground italic">
+															"{item.reflection.summary.key_insights}"
+														</p>
+													</div>
+												</motion.div>
+											)}
+										</>
 									)}
 								</div>
 							</motion.div>

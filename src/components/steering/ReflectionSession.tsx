@@ -1,37 +1,18 @@
-import { useLogHistoryData } from "@/data/history";
 import type { Model } from "../../lib/models";
-import type { Question, Reflection } from "../../types/user";
-import { Questionaire } from "./Questionaire";
+import { SocraticChat } from "./SocraticChat";
 
 interface ReflectionSessionProps {
 	model?: Model; // Kept for backward compatibility but not used
 }
 
-export function ReflectionSession({ model: _model }: ReflectionSessionProps) {
-	// _model is accepted for backward compatibility but not used
-	const logHistoryData = useLogHistoryData();
+export function ReflectionSession({ model }: ReflectionSessionProps) {
+	if (!model) {
+		return (
+			<div className="h-full flex items-center justify-center">
+				<p className="text-muted-foreground">No model configured for reflection session.</p>
+			</div>
+		);
+	}
 
-	const handleComplete = (questions: Question[]) => {
-		const reflection: Reflection = {
-			questions,
-			created_at: new Date().toISOString(),
-		};
-		logHistoryData({
-			type: "reflection",
-			reflection: reflection,
-			time: new Date(),
-		});
-	};
-
-	return (
-		<Questionaire
-			referer="reflection"
-			onComplete={handleComplete}
-			title="Reflection Session"
-			generatingMessage="Crafting personalized questions for your reflection..."
-			completionTitle="Reflection Complete!"
-			completionMessage="Thank you for taking the time to reflect. Your Coach will review this data and provide insights."
-			restartLabel="Start New Reflection"
-		/>
-	);
+	return <SocraticChat model={model} />;
 }

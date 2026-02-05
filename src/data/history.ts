@@ -1,6 +1,7 @@
-import type { HistoryItem } from "@/types/user";
-import { useSurreal } from "./surreal";
 import { useCallback } from "react";
+import type { HistoryItem } from "@/types/user";
+import { isLegacyReflection, isSocraticReflection } from "@/types/user";
+import { useSurreal } from "./surreal";
 
 export function useLogHistoryData() {
 	const surreal = useSurreal();
@@ -41,23 +42,39 @@ export function useGetPromptHistoryData() {
 				.map((item) => {
 					switch (item.type) {
 						case "reflection":
-							return `
+							if (isLegacyReflection(item.reflection)) {
+								return `
 ### Reflection Entry - ${getDaysAgo(item.time)}
 Questions:
 ${item.reflection.questions.map((q) => `- ${q.question}: ${q.answer}`).join("\n")}
             `.trim();
-						case "session":
+							}
+							if (isSocraticReflection(item.reflection)) {
+								const summary = item.reflection.summary;
+								return `
+### Socratic Reflection Entry - ${getDaysAgo(item.time)}
+Summary: ${summary.conversation_summary}
+Key Insights: ${summary.key_insights}
+Conducive Thoughts: ${summary.conducive_thoughts.join("; ")}
+Not Conducive Thoughts: ${summary.not_conducive_thoughts.join("; ")}
+            `.trim();
+							}
+							return `### Reflection Entry - ${getDaysAgo(item.time)}`;
+						case "session": {
+							let debriefText = "";
+							if (item.debrief) {
+								if (isLegacyReflection(item.debrief)) {
+									debriefText = `\nDebrief:\n${item.debrief.questions.map((q) => `- ${q.question}: ${q.answer}`).join("\n")}`;
+								} else if (isSocraticReflection(item.debrief)) {
+									const summary = item.debrief.summary;
+									debriefText = `\nDebrief (Socratic):\n- Summary: ${summary.conversation_summary}\n- Key Insights: ${summary.key_insights}`;
+								}
+							}
 							return `
 ### Session Entry - ${getDaysAgo(item.time)}
-Session Type: ${item.session_type}
-${
-	item.debrief
-		? `
-Debrief:
-${item.debrief.questions.map((q) => `- ${q.question}: ${q.answer}`).join("\n")}`
-		: ""
-}
+Session Type: ${item.session_type}${debriefText}
             `.trim();
+						}
 						default:
 							return "";
 					}
