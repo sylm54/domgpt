@@ -1,3 +1,4 @@
+import type { OpenRouter } from "@openrouter/sdk";
 import type { ChatMessage, Model, Tool } from "./models";
 
 /**
@@ -17,6 +18,12 @@ export type AgentContext = {
  * It manages conversation context and provides a standardized
  * interface for agent actions.
  */
+export interface RAGOptions {
+	enableRAG: boolean;
+	embeddingModel: string;
+	openRouter: OpenRouter;
+}
+
 export abstract class Agent {
 	model: Model;
 	context: AgentContext;
@@ -83,11 +90,46 @@ export abstract class Agent {
 	async act(
 		message: ChatMessage,
 		tools?: Tool[],
-		onProgress?: (msg: ChatMessage) => void
+		onProgress?: (msg: ChatMessage) => void,
+		ragOptions?: RAGOptions
 	): Promise<ChatMessage> {
 		// Add user message to conversation
 		this.context.conversation.push(message);
 		this.context._notify();
+
+		// RAG injection (optional)
+		if (ragOptions?.enableRAG) {
+			try {
+				const { useRAG } = await import("@/data/rag");
+				const rag = useRAG();
+
+				// Get current context for RAG (excluding system messages)
+				const contextMessages = [...this.context.conversation];
+
+				// Extract user's query from the message
+				const userText = message.content
+					.filter((p) => p.type === "text")
+					.map((p) => p.text)
+					.join("");
+
+				// Perform RAG retrieval
+				const { ragMessage } = await rag({
+					query: userText,
+					contextMessages,
+					embeddingModel: ragOptions.embeddingModel,
+					openRouter: ragOptions.openRouter,
+					limit: 5,
+				});
+
+				// Inject RAG message before the user's message (so it's just above it)
+				const insertionIndex = this.context.conversation.length - 1;
+				this.context.conversation.splice(insertionIndex, 0, ragMessage);
+				this.context._notify();
+			} catch (error) {
+				console.error("RAG injection failed:", error);
+				// Continue without RAG if it fails
+			}
+		}
 
 		// Create in-progress message
 		const inProgress: ChatMessage = {

@@ -88,6 +88,47 @@ export function AISettings() {
 					</Select>
 				</div>
 			</div>
+
+			<div className="space-y-4 p-5 rounded-xl bg-muted/30 border border-border/50">
+				<div className="flex items-center gap-3 pb-2 border-b border-border/50">
+					<div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+						<Cpu className="w-4 h-4 text-primary" />
+					</div>
+					<h3 className="font-medium">Embedding Model</h3>
+				</div>
+
+				<div className="space-y-2">
+					<Label htmlFor="embedding-model" className="text-sm text-muted-foreground">
+						Embedding Model
+					</Label>
+					<Select
+						value={settings.embedding_model || "openai/text-embedding-3-small"}
+						onValueChange={(value) => updateSettings({ embedding_model: value })}
+					>
+						<SelectTrigger
+							id="embedding-model"
+							className="h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+						>
+							<SelectValue placeholder="Select embedding model" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="openai/text-embedding-3-small">
+								OpenAI text-embedding-3-small
+							</SelectItem>
+							<SelectItem value="openai/text-embedding-3-large">
+								OpenAI text-embedding-3-large
+							</SelectItem>
+							<SelectItem value="openai/text-embedding-ada-002">
+								OpenAI text-embedding-ada-002
+							</SelectItem>
+						</SelectContent>
+					</Select>
+					<p className="text-xs text-muted-foreground mt-2">
+						Model used for generating embeddings for memory retrieval. Smaller models are faster but
+						less accurate.
+					</p>
+				</div>
+			</div>
 		</div>
 	);
 }

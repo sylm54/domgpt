@@ -241,12 +241,17 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 		const from = msg.type === "user" ? "user" : msg.type === "event" ? "event" : "assistant";
 		const avatarSrc =
 			msg.type === "user" ? userAvatarSrc : msg.type === "event" ? undefined : assistantAvatarSrc;
+		const isRAGMessage =
+			msg.type === "user" &&
+			msg.content.some(
+				(part: MessagePart) => part.type === "text" && part.text.startsWith("## Relevant Memories")
+			);
 
 		return (
 			<article
 				key={`${msg.type}-${index}-${streaming ? "stream" : "final"}`}
 				aria-label={`${msg.type} message`}
-				className="w-full"
+				className={cn("w-full", isRAGMessage && "rag-message")}
 			>
 				{from === "event" ? (
 					<Tool className="overflow-auto border-primary/20">
@@ -403,7 +408,18 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 			<Conversation className="min-h-0 flex-1" autoScrollTrigger={autoScrollTrigger}>
 				<ConversationContent>
 					{/* Conversation history */}
-					{conversation.map((msg, i) => renderChatMessage(msg, i, false))}
+					{conversation
+						.filter((msg) => {
+							// Filter out RAG messages from main conversation
+							const isRAG =
+								msg.type === "user" &&
+								msg.content.some(
+									(part: MessagePart) =>
+										part.type === "text" && part.text.startsWith("## Relevant Memories")
+								);
+							return !isRAG;
+						})
+						.map((msg, i) => renderChatMessage(msg, i, false))}
 
 					{/* In progress streaming message if present */}
 					{inProgress ? renderChatMessage(inProgress, conversation.length, true) : null}

@@ -13,8 +13,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useGetPromptHistoryData } from "@/data/history";
 import { useAddInfo } from "@/data/info";
+import { useCreateMemory } from "@/data/memory";
 import { useProfileStore } from "@/data/profile";
-import { useSettingsStore } from "@/data/settings";
+import { useEmbeddingModel, useSettingsStore } from "@/data/settings";
 import { cn } from "@/lib/utils";
 import { getCoachPrompt } from "@/prompts/coach";
 import { CoachAgent } from "../../lib/agent";
@@ -81,6 +82,8 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 	const { profile, setProfile, updateProfile, updatePlan, getProfile } = useProfileStore();
 	const { settings } = useSettingsStore();
 	const addInfo = useAddInfo();
+	const createMemory = useCreateMemory();
+	const embeddingModelConfig = useEmbeddingModel();
 	const prevProfileRef = useRef(JSON.parse(JSON.stringify(profile ?? {})));
 	const [loading, setLoading] = useState(true);
 	useEffect(() => {
@@ -88,7 +91,7 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 		if (profile) return;
 		setProfile({
 			goal: "",
-			plan: { hypno: "", challenges: "", user: "", interview: "",coach:"" },
+			plan: { hypno: "", challenges: "", user: "", interview: "", coach: "" },
 			profile: "",
 			created_at: new Date(),
 		});
@@ -195,8 +198,32 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 					return "Coaching process marked as complete.";
 				},
 			}),
+			tool({
+				name: "CreateMemory",
+				description: "Store important information about the user in memory for future reference",
+				schema: {
+					content: z.string().describe("The information to store in memory"),
+					importance: z
+						.number()
+						.min(1)
+						.max(10)
+						.describe("Importance rating from 1-10 (higher is more important)"),
+				},
+				call: async ({ content, importance }) => {
+					if (!embeddingModelConfig.model) {
+						return "Memory creation skipped: embedding model not configured";
+					}
+					await createMemory(
+						content,
+						importance,
+						embeddingModelConfig.modelName,
+						embeddingModelConfig.model.openRouter
+					);
+					return `Memory created successfully with importance ${importance}/10`;
+				},
+			}),
 		],
-		[getProfile, updateProfile, updatePlan]
+		[getProfile, updateProfile, updatePlan, createMemory, embeddingModelConfig]
 	);
 
 	// Inject tools into agent when it's created
@@ -205,7 +232,14 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 			// Override the act method to include tools
 			const originalAct = agent.act.bind(agent);
 			agent.act = async (message, _, onProgress) => {
-				return originalAct(message, tools, onProgress);
+				const ragOptions = embeddingModelConfig.model
+					? {
+							enableRAG: true,
+							embeddingModel: embeddingModelConfig.modelName,
+							openRouter: embeddingModelConfig.model,
+						}
+					: undefined;
+				return originalAct(message, tools, onProgress, ragOptions);
 			};
 
 			getPromptHistoryData(5).then((history) => {

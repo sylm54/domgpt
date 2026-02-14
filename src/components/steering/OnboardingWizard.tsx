@@ -631,9 +631,7 @@ function APIKeysStep() {
 						<SelectContent>
 							<SelectItem value="x-ai/grok-4.1-fast">Grok 4.1 Fast (Speedy)</SelectItem>
 							<SelectItem value="deepseek/deepseek-v3.2-exp">DeepSeek v3.2 Experimental</SelectItem>
-							<SelectItem value="meituan/longcat-flash-chat">
-								LongCat Flash Chat (Meituan)
-							</SelectItem>
+							<SelectItem value="deepseek/deepseek-v3.2">DeepSeek v3.2</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>

@@ -3,7 +3,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useLogHistoryData } from "@/data/history";
+import { useCreateMemory } from "@/data/memory";
 import { useProfileStore } from "@/data/profile";
+import { useEmbeddingModel } from "@/data/settings";
 import { cn } from "@/lib/utils";
 import { SocraticAgent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
@@ -26,6 +28,8 @@ export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 	const { profile } = useProfileStore();
 	const [loading, setLoading] = useState(true);
 	const [thoughtAnalysis, setThoughtAnalysis] = useState<ThoughtAnalysis[]>([]);
+	const createMemory = useCreateMemory();
+	const { model: embeddingModel, modelName: embeddingModelName } = useEmbeddingModel();
 
 	useEffect(() => {
 		const socraticAgent = new SocraticAgent(model);
@@ -104,15 +108,41 @@ export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 					return "Reflection session saved successfully.";
 				},
 			}),
+			tool({
+				name: "CreateMemory",
+				description: "Store important insights about the user's thoughts or patterns in memory",
+				schema: {
+					content: z.string().describe("The information to store in memory"),
+					importance: z
+						.number()
+						.min(1)
+						.max(10)
+						.describe("Importance rating from 1-10 (higher is more important)"),
+				},
+				call: async ({ content, importance }) => {
+					if (!embeddingModel) {
+						return "Memory creation skipped: embedding model not configured";
+					}
+					await createMemory(content, importance, embeddingModelName, embeddingModel.openRouter);
+					return `Memory created successfully with importance ${importance}/10`;
+				},
+			}),
 		],
-		[thoughtAnalysis, logHistoryData, agent]
+		[thoughtAnalysis, logHistoryData, agent, embeddingModel, embeddingModelName, createMemory]
 	);
 
 	useEffect(() => {
 		if (agent) {
 			const originalAct = agent.act.bind(agent);
 			agent.act = async (message, _, onProgress) => {
-				return originalAct(message, tools, onProgress);
+				const ragOptions = embeddingModel
+					? {
+							enableRAG: true,
+							embeddingModel: embeddingModelName,
+							openRouter: embeddingModel,
+						}
+					: undefined;
+				return originalAct(message, tools, onProgress, ragOptions);
 			};
 
 			// Set system prompt with profile context
@@ -136,7 +166,7 @@ Your task is to:
 			agent.setSystemPrompt(systemPrompt);
 			setLoading(false);
 		}
-	}, [agent, tools, profile]);
+	}, [agent, tools, profile, embeddingModel, embeddingModelName]);
 
 	if (loading) {
 		return (

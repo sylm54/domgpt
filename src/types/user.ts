@@ -45,6 +45,15 @@ export type UserInfo = {
 	embedding?: number[];
 };
 
+export type Memory = {
+	id?: RecordId;
+	content: string;
+	embedding?: number[];
+	created_at: Date;
+	last_accessed: Date;
+	importance: number;
+};
+
 export type LLMEngine = {
 	type: "openrouter";
 	api_key?: string;
@@ -86,6 +95,8 @@ export type AppSettings = {
 	tts_engine?: TTSEngine;
 	coach_traits?: CoachTrait[];
 	hypno_style?: HypnoStyleConfig;
+	embedding_engine?: LLMEngine;
+	embedding_model?: string;
 };
 
 export type SessionType = "hypno" | "trigger_gym" | "challenge" | "habit" | "mantra" | "subliminal";
