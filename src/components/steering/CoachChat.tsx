@@ -91,7 +91,7 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 		if (profile) return;
 		setProfile({
 			goal: "",
-			plan: { hypno: "", challenges: "", user: "", interview: "", coach: "" },
+			plan: { hypno: "", challenges: "", user: "", interview: "", coach: "", reflection: "" },
 			profile: "",
 			created_at: new Date(),
 		});
@@ -198,30 +198,30 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 					return "Coaching process marked as complete.";
 				},
 			}),
-			tool({
-				name: "CreateMemory",
-				description: "Store important information about the user in memory for future reference",
-				schema: {
-					content: z.string().describe("The information to store in memory"),
-					importance: z
-						.number()
-						.min(1)
-						.max(10)
-						.describe("Importance rating from 1-10 (higher is more important)"),
-				},
-				call: async ({ content, importance }) => {
-					if (!embeddingModelConfig.model) {
-						return "Memory creation skipped: embedding model not configured";
-					}
-					await createMemory(
-						content,
-						importance,
-						embeddingModelConfig.modelName,
-						embeddingModelConfig.model.openRouter
-					);
-					return `Memory created successfully with importance ${importance}/10`;
-				},
-			}),
+			// tool({
+			// 	name: "CreateMemory",
+			// 	description: "Store important information about the user in memory for future reference",
+			// 	schema: {
+			// 		content: z.string().describe("The information to store in memory"),
+			// 		importance: z
+			// 			.number()
+			// 			.min(1)
+			// 			.max(10)
+			// 			.describe("Importance rating from 1-10 (higher is more important)"),
+			// 	},
+			// 	call: async ({ content, importance }) => {
+			// 		if (!embeddingModelConfig.model) {
+			// 			return "Memory creation skipped: embedding model not configured";
+			// 		}
+			// 		await createMemory(
+			// 			content,
+			// 			importance,
+			// 			embeddingModelConfig.modelName,
+			// 			embeddingModelConfig.model.openRouter
+			// 		);
+			// 		return `Memory created successfully with importance ${importance}/10`;
+			// 	},
+			// }),
 		],
 		[getProfile, updateProfile, updatePlan, createMemory, embeddingModelConfig]
 	);

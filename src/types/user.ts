@@ -22,6 +22,19 @@ export interface HistoryReflection extends HistoryData {
 	reflection: Reflection;
 }
 
+export type ModelDefinition = {
+	id: string;
+	name: string;
+	description: string;
+	in_cost: number;
+	out_cost: number;
+	stats: {
+		cost: number; //0-1
+		speed: number; //0-1
+		quality: number; //0-1
+	};
+};
+
 export type UserProfile = {
 	profile: string;
 	goal: string;
@@ -35,6 +48,7 @@ export type ConditioningPlan = {
 	user: string;
 	coach: string;
 	interview: string;
+	reflection: string;
 };
 
 export type UserInfo = {

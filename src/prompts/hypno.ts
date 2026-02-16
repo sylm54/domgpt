@@ -44,7 +44,8 @@ Create a complete session plan. For each part, use CreateSection and include the
 - Section name and purpose
 - Suggested induction/deepening techniques and expected depth
 - Key suggestions, metaphors, anchors, and framing language
-- Timing estimates and transitions into/from the section
+
+When converting each planner section into a TTS-ready script, the Hypno Writer can and should make use of a wide range of audio and production tools to enhance effectiveness: voice changes, pacing adjustments, <pause/> durations, <speed/> control, sound effects (beep, pop, bubble_pop, camera_shutter, censor_beep, heart_beat, padlock, snap), <effect> presets (binaural, echo, reverb), overlays and layered parts, volume and loop controls, and subtle audio cues for anchors. Suggest specific tags and placement for anchors, cues, and transitions so the Writer can implement them precisely in the TTS output.
 
 Required Sections (create each with CreateSection)
 1. Pre-talk
