@@ -2,10 +2,10 @@ import { Brain, CheckCircle2, Lightbulb, MessageSquare, Sparkles } from "lucide-
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { useGetPromptHistoryData, useLogHistoryData } from "@/data/history";
+import { useLogHistoryData } from "@/data/history";
 import { useCreateMemory } from "@/data/memory";
 import { useProfileStore } from "@/data/profile";
-import { useEmbeddingModel, useSettingsStore } from "@/data/settings";
+import { useEmbeddingModel } from "@/data/settings";
 import { cn } from "@/lib/utils";
 import { SocraticAgent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
@@ -14,7 +14,6 @@ import type { ReflectionSummary, ThoughtAnalysis } from "../../types/user";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Chat } from "../ui/shadcn-io/ai/chat";
-import { getSochraticInterviewPrompt } from "@/prompts/interview";
 
 interface SocraticChatProps {
 	model: Model;
@@ -31,8 +30,6 @@ export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 	const [thoughtAnalysis, setThoughtAnalysis] = useState<ThoughtAnalysis[]>([]);
 	const createMemory = useCreateMemory();
 	const { model: embeddingModel, modelName: embeddingModelName } = useEmbeddingModel();
-	const getPromptHistoryData = useGetPromptHistoryData();
-	const { settings } = useSettingsStore();
 
 	useEffect(() => {
 		const socraticAgent = new SocraticAgent(model);
@@ -111,25 +108,25 @@ export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 					return "Reflection session saved successfully.";
 				},
 			}),
-			// tool({
-			// 	name: "CreateMemory",
-			// 	description: "Store important insights about the user's thoughts or patterns in memory",
-			// 	schema: {
-			// 		content: z.string().describe("The information to store in memory"),
-			// 		importance: z
-			// 			.number()
-			// 			.min(1)
-			// 			.max(10)
-			// 			.describe("Importance rating from 1-10 (higher is more important)"),
-			// 	},
-			// 	call: async ({ content, importance }) => {
-			// 		if (!embeddingModel) {
-			// 			return "Memory creation skipped: embedding model not configured";
-			// 		}
-			// 		await createMemory(content, importance, embeddingModelName, embeddingModel.openRouter);
-			// 		return `Memory created successfully with importance ${importance}/10`;
-			// 	},
-			// }),
+			tool({
+				name: "CreateMemory",
+				description: "Store important insights about the user's thoughts or patterns in memory",
+				schema: {
+					content: z.string().describe("The information to store in memory"),
+					importance: z
+						.number()
+						.min(1)
+						.max(10)
+						.describe("Importance rating from 1-10 (higher is more important)"),
+				},
+				call: async ({ content, importance }) => {
+					if (!embeddingModel) {
+						return "Memory creation skipped: embedding model not configured";
+					}
+					await createMemory(content, importance, embeddingModelName, embeddingModel.openRouter);
+					return `Memory created successfully with importance ${importance}/10`;
+				},
+			}),
 		],
 		[thoughtAnalysis, logHistoryData, agent, embeddingModel, embeddingModelName, createMemory]
 	);
@@ -148,15 +145,28 @@ export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 				return originalAct(message, tools, onProgress, ragOptions);
 			};
 
-			getPromptHistoryData().then((data) => {
-				// Set system prompt with profile context
-				const systemPrompt = getSochraticInterviewPrompt(profile, settings.coach_traits, data);
+			// Set system prompt with profile context
+			const systemPrompt = `You are a Socratic Reflection Agent helping the user examine their thoughts and thought patterns.
 
-				agent.setSystemPrompt(systemPrompt);
-				setLoading(false);
-			});
+USER PROFILE:
+${profile?.profile || "No profile set yet."}
+
+USER GOAL:
+${profile?.goal || "No goal set yet."}
+
+Your task is to:
+1. Start with a warm, open-ended question about their recent experiences or current state
+2. Use socratic questioning to help them examine their thoughts deeply
+3. When you identify a thought that supports their goals, use AnalyzeThought tool with is_conducive=true
+4. When you identify a thought that hinders their goals, use AnalyzeThought tool with is_conducive=false and provide a reframed version
+5. After some meaningful exchanges, use CompleteSession to summarize
+
+`;
+
+			agent.setSystemPrompt(systemPrompt);
+			setLoading(false);
 		}
-	}, [agent, tools, profile, embeddingModel, embeddingModelName, getPromptHistoryData, settings]);
+	}, [agent, tools, profile, embeddingModel, embeddingModelName]);
 
 	if (loading) {
 		return (

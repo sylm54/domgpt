@@ -1,6 +1,6 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "domgpt",
+	"productName": "Condition",
 	"version": "0.1.16",
 	"identifier": "com.ylm.domgpt",
 	"build": {

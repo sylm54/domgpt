@@ -82,7 +82,7 @@ export function AudioSettings() {
 
 			setGeneratedScript(result);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to generate audio");
+			setError(err instanceof Error ? err.message : "Failed to generate audio "+err.toString());
 		} finally {
 			setIsGenerating(false);
 		}

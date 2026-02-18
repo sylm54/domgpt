@@ -1117,7 +1117,7 @@ impl ScriptToAudioContext {
         let speed = 0.75 + speed * 0.5;
         let (wav, _duration) =
             self.tts
-                .call(format!(". {}", text).as_str(), &style, 50, speed, 0.3)?;
+                .call(format!(". {}", text).as_str(), &style, 20, speed, 0.5)?;
 
         let buffer = AudioBuffer::from_mono(wav, self.sample_rate);
 

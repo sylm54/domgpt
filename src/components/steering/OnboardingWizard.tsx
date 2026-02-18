@@ -4,6 +4,7 @@ import {
 	Brain,
 	Check,
 	Cpu,
+	Dumbbell,
 	Heart,
 	Key,
 	Loader2,
@@ -13,6 +14,7 @@ import {
 	Shield,
 	Sparkles,
 	Target,
+	Users,
 	Volume2,
 	VolumeX,
 	Zap,
@@ -24,7 +26,7 @@ import { useProfileStore } from "@/data/profile";
 import { getLLMModel, useSettingsStore } from "@/data/settings";
 import type { Model } from "@/lib/models";
 import { setOnboardingCompleted } from "@/pages/Dashboard";
-import type { CoachTrait } from "@/types/user";
+import type { CoachPersonality, CoachTrait } from "@/types/user";
 import { type AudioScript, generateAudio, type TtsProgressEvent } from "../../lib/tts-rust";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -34,6 +36,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { CoachChat } from "./CoachChat";
+import { personalityDefinitions, traitDefinitions } from "@/data/definitions";
 
 const steps = [
 	{
@@ -327,7 +330,7 @@ function AudioTestStep({ onComplete }: { onComplete: () => void }) {
 			setGeneratedScript(result);
 			onComplete();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to generate audio");
+			setError(err instanceof Error ? err.message : "Failed to generate audio " + err.toString());
 		} finally {
 			setIsGenerating(false);
 		}
@@ -643,68 +646,6 @@ function APIKeysStep() {
 function CoachTraitsStep() {
 	const { settings, updateSettings } = useSettingsStore();
 
-	const traitDefinitions: {
-		value: CoachTrait;
-		label: string;
-		description: string;
-		icon: React.ReactNode;
-	}[] = [
-		{
-			value: "soft",
-			label: "Soft",
-			description: "Gentle and non-confrontational",
-			icon: <Heart className="w-4 h-4" />,
-		},
-		{
-			value: "motivational",
-			label: "Motivational",
-			description: "Inspires and uplifts the user",
-			icon: <Sparkles className="w-4 h-4" />,
-		},
-		{
-			value: "encouraging",
-			label: "Encouraging",
-			description: "More friendly and supportive",
-			icon: <MessageCircle className="w-4 h-4" />,
-		},
-		{
-			value: "empathetic",
-			label: "Empathetic",
-			description: "Shows understanding of user's feelings",
-			icon: <Heart className="w-4 h-4" />,
-		},
-		{
-			value: "direct",
-			label: "Direct",
-			description: "Straightforward and to the point",
-			icon: <Target className="w-4 h-4" />,
-		},
-		{
-			value: "informative",
-			label: "Informative",
-			description: "Provides detailed explanations",
-			icon: <Brain className="w-4 h-4" />,
-		},
-		{
-			value: "intense",
-			label: "Intense",
-			description: "More forceful and goes farther",
-			icon: <Zap className="w-4 h-4" />,
-		},
-		{
-			value: "pushing",
-			label: "Pushing",
-			description: "Expands on your goals and takes them further",
-			icon: <Target className="w-4 h-4" />,
-		},
-		{
-			value: "assertive",
-			label: "Assertive",
-			description: "Takes initiative and guides your journey",
-			icon: <Shield className="w-4 h-4" />,
-		},
-	];
-
 	const selectedTraits = settings.coach_traits || [];
 
 	const handleTraitToggle = (trait: CoachTrait) => {
@@ -712,6 +653,12 @@ function CoachTraitsStep() {
 			? selectedTraits.filter((t) => t !== trait)
 			: [...selectedTraits, trait];
 		updateSettings({ coach_traits: newTraits });
+	};
+
+	const selectedPersonality = settings.coach_personality;
+
+	const handlePersonalitySelect = (personality: CoachPersonality) => {
+		updateSettings({ coach_personality: personality });
 	};
 
 	return (
@@ -804,6 +751,85 @@ function CoachTraitsStep() {
 					Select at least one trait to continue
 				</p>
 			)}
+
+			<div className="space-y-2 pt-4">
+				<h3 className="text-sm font-medium">Coach Role</h3>
+				<p className="text-sm text-muted-foreground leading-relaxed">
+					Choose the primary role your Coach should embody.
+				</p>
+			</div>
+
+			{selectedPersonality && (
+				<div className="flex flex-wrap gap-2 p-3 rounded-xl bg-primary/10 border border-primary/20">
+					<Badge
+						variant="default"
+						className="text-sm bg-primary/20 text-primary hover:bg-primary/30 border-0"
+					>
+						{personalityDefinitions.find((p) => p.value === selectedPersonality)?.label}
+					</Badge>
+				</div>
+			)}
+
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+				{personalityDefinitions.map(({ value, label, description, icon }) => {
+					const isSelected = selectedPersonality === value;
+
+					return (
+						<button
+							key={value}
+							type="button"
+							onClick={() => handlePersonalitySelect(value)}
+							className={`
+								relative group text-left p-4 rounded-xl border-2 transition-all duration-200
+								hover:-translate-y-0.5 hover:shadow-lg
+								${
+									isSelected
+										? "bg-primary/10 border-primary"
+										: "bg-background/50 border-border/50 hover:border-border hover:bg-muted/30"
+								}
+							`}
+						>
+							<div className="flex items-start gap-3">
+								<div
+									className={`
+										mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
+										transition-all duration-200
+										${
+											isSelected
+												? "bg-primary border-primary"
+												: "border-muted-foreground/30 group-hover:border-muted-foreground/50"
+										}
+									`}
+								>
+									{isSelected && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+								</div>
+
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2 mb-1">
+										<span
+											className={`
+												transition-colors duration-200
+												${isSelected ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}
+											`}
+										>
+											{icon}
+										</span>
+										<span
+											className={`
+												font-medium transition-colors duration-200
+												${isSelected ? "text-primary" : "text-foreground"}
+											`}
+										>
+											{label}
+										</span>
+									</div>
+									<p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+								</div>
+							</div>
+						</button>
+					);
+				})}
+			</div>
 		</div>
 	);
 }

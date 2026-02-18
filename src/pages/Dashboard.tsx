@@ -3,6 +3,7 @@ import {
 	BrainCircuit,
 	Calendar,
 	Flame,
+	ListTodo,
 	MessageSquare,
 	Play,
 	RefreshCw,
@@ -403,6 +404,13 @@ export function Dashboard() {
 								description: "Complete real-world tasks",
 								variant: "outline" as const,
 								icon: <Target className="h-6 w-6" />,
+							},
+							{
+								onClick: () => navigate("/todos"),
+								title: "Daily Todos",
+								description: "Track your habits and tasks",
+								variant: "outline" as const,
+								icon: <ListTodo className="h-6 w-6" />,
 							},
 							{
 								onClick: () => navigate("/reflection"),

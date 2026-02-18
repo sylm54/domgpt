@@ -19,6 +19,7 @@ import {
 	SettingsPage,
 	SubliminalNewPage,
 	SubliminalPlayPage,
+	TodosPage,
 } from "./pages";
 
 // Layout component
@@ -46,6 +47,7 @@ export const router = createMemoryRouter(
 			<Route path="settings" element={<SettingsPage />} />
 			<Route path="coach" element={<CoachPage />} />
 			<Route path="challenges" element={<ChallengesPage />} />
+			<Route path="todos" element={<TodosPage />} />
 			<Route path="reflection" element={<ReflectionPage />} />
 			<Route path="hypno/new" element={<HypnoNewPage />} />
 			<Route path="hypno/play/:sessionId" element={<HypnoPlayPage />} />

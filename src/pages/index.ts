@@ -8,3 +8,4 @@ export { ReflectionPage } from "./ReflectionPage";
 export { SettingsPage } from "./SettingsPage";
 export { SubliminalNewPage } from "./SubliminalNewPage";
 export { SubliminalPlayPage } from "./SubliminalPlayPage";
+export { TodosPage } from "./TodosPage";

@@ -4,9 +4,11 @@ import {
 	Database,
 	FileText,
 	Info,
+	ListTodo,
 	PlayCircle,
 	RefreshCw,
 	Sparkles,
+	Trash2,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,6 +18,7 @@ import { useAddInfo } from "@/data/info";
 import { useCreateMemory } from "@/data/memory";
 import { useProfileStore } from "@/data/profile";
 import { useEmbeddingModel, useSettingsStore } from "@/data/settings";
+import { useDeleteTodo, useGetTodoStats, useTodos, useWriteTodo } from "@/data/todos";
 import { cn } from "@/lib/utils";
 import { getCoachPrompt } from "@/prompts/coach";
 import { CoachAgent } from "../../lib/agent";
@@ -84,6 +87,9 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 	const addInfo = useAddInfo();
 	const createMemory = useCreateMemory();
 	const embeddingModelConfig = useEmbeddingModel();
+	const writeTodo = useWriteTodo();
+	const deleteTodo = useDeleteTodo();
+	const getTodoStats = useGetTodoStats();
 	const prevProfileRef = useRef(JSON.parse(JSON.stringify(profile ?? {})));
 	const [loading, setLoading] = useState(true);
 	useEffect(() => {
@@ -91,7 +97,7 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 		if (profile) return;
 		setProfile({
 			goal: "",
-			plan: { hypno: "", challenges: "", user: "", interview: "", coach: "", reflection: "" },
+			plan: { hypno: "", challenges: "", user: "", interview: "", coach: "" },
 			profile: "",
 			created_at: new Date(),
 		});
@@ -198,32 +204,114 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 					return "Coaching process marked as complete.";
 				},
 			}),
-			// tool({
-			// 	name: "CreateMemory",
-			// 	description: "Store important information about the user in memory for future reference",
-			// 	schema: {
-			// 		content: z.string().describe("The information to store in memory"),
-			// 		importance: z
-			// 			.number()
-			// 			.min(1)
-			// 			.max(10)
-			// 			.describe("Importance rating from 1-10 (higher is more important)"),
-			// 	},
-			// 	call: async ({ content, importance }) => {
-			// 		if (!embeddingModelConfig.model) {
-			// 			return "Memory creation skipped: embedding model not configured";
-			// 		}
-			// 		await createMemory(
-			// 			content,
-			// 			importance,
-			// 			embeddingModelConfig.modelName,
-			// 			embeddingModelConfig.model.openRouter
-			// 		);
-			// 		return `Memory created successfully with importance ${importance}/10`;
-			// 	},
-			// }),
+			tool({
+				name: "CreateMemory",
+				description: "Store important information about the user in memory for future reference",
+				schema: {
+					content: z.string().describe("The information to store in memory"),
+					importance: z
+						.number()
+						.min(1)
+						.max(10)
+						.describe("Importance rating from 1-10 (higher is more important)"),
+				},
+				call: async ({ content, importance }) => {
+					if (!embeddingModelConfig.model) {
+						return "Memory creation skipped: embedding model not configured";
+					}
+					await createMemory(
+						content,
+						importance,
+						embeddingModelConfig.modelName,
+						embeddingModelConfig.model.openRouter
+					);
+					return `Memory created successfully with importance ${importance}/10`;
+				},
+			}),
+			tool({
+				name: "WriteTodo",
+				description:
+					"Create a new todo or update an existing one. If id is provided, updates the existing todo; otherwise creates a new one.",
+				schema: {
+					id: z.string().optional().describe("The todo ID to update (omit to create new)"),
+					title: z.string().describe("Short title for the todo"),
+					content: z.string().describe("Detailed content/instructions for the todo"),
+					weekdays: z
+						.array(z.number().min(0).max(6))
+						.optional()
+						.describe(
+							"Days of week this todo should be shown (0=Sunday, 1=Monday, ... 6=Saturday). Omit for daily todos."
+						),
+				},
+				call: async ({ id, title, content, weekdays }) => {
+					try {
+						const result = await writeTodo({
+							id: id ? JSON.parse(id) : undefined,
+							title,
+							content,
+							weekdays,
+						});
+						return JSON.stringify({
+							success: true,
+							todo: result,
+							action: id ? "updated" : "created",
+						});
+					} catch (error) {
+						return JSON.stringify({
+							success: false,
+							error: error instanceof Error ? error.message : String(error),
+						});
+					}
+				},
+			}),
+			tool({
+				name: "DeleteTodo",
+				description: "Delete a todo by its ID",
+				schema: {
+					id: z.string().describe("The todo ID to delete"),
+				},
+				call: async ({ id }) => {
+					try {
+						await deleteTodo(JSON.parse(id));
+						return JSON.stringify({ success: true });
+					} catch (error) {
+						return JSON.stringify({
+							success: false,
+							error: error instanceof Error ? error.message : String(error),
+						});
+					}
+				},
+			}),
+			tool({
+				name: "GetTodos",
+				description: "Get all todos with their current status and completion statistics",
+				schema: {},
+				call: async () => {
+					try {
+						const stats = await getTodoStats();
+						return JSON.stringify({
+							success: true,
+							todos: stats,
+						});
+					} catch (error) {
+						return JSON.stringify({
+							success: false,
+							error: error instanceof Error ? error.message : String(error),
+						});
+					}
+				},
+			}),
 		],
-		[getProfile, updateProfile, updatePlan, createMemory, embeddingModelConfig]
+		[
+			getProfile,
+			updateProfile,
+			updatePlan,
+			createMemory,
+			embeddingModelConfig,
+			writeTodo,
+			deleteTodo,
+			getTodoStats,
+		]
 	);
 
 	// Inject tools into agent when it's created
@@ -243,8 +331,12 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 			};
 
 			getPromptHistoryData(5).then((history) => {
-				// Build system prompt based on phase
-				const systemPrompt = getCoachPrompt(isOnboarding, settings.coach_traits ?? [], history);
+				const systemPrompt = getCoachPrompt(
+					isOnboarding,
+					settings.coach_traits ?? [],
+					settings.coach_personality,
+					history
+				);
 
 				if (isOnboarding) {
 					if (agent.context.conversation.length === 0) {
@@ -260,7 +352,14 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 				setLoading(false);
 			});
 		}
-	}, [agent, isOnboarding, tools, settings.coach_traits, getPromptHistoryData]);
+	}, [
+		agent,
+		isOnboarding,
+		tools,
+		settings.coach_traits,
+		settings.coach_personality,
+		getPromptHistoryData,
+	]);
 
 	if (loading) {
 		return (
@@ -455,6 +554,78 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 										</span>
 										<Badge className="font-semibold text-white shadow-sm bg-emerald-500">
 											Complete
+										</Badge>
+									</motion.div>
+								);
+							}
+
+							// Handle WriteTodo tool
+							if (tool.tool === "WriteTodo") {
+								const title = input.title || "Untitled";
+								const isUpdate = !!input.id;
+								return (
+									<ToolActionCard
+										icon={ListTodo}
+										iconColor="text-violet-500"
+										label={isUpdate ? "Updated todo:" : "Created todo:"}
+										badge={title}
+										badgeClassName="bg-violet-500"
+										borderColor="border-l-violet-500"
+									/>
+								);
+							}
+
+							// Handle DeleteTodo tool
+							if (tool.tool === "DeleteTodo") {
+								return (
+									<motion.div
+										initial={{ opacity: 0, y: 8, scale: 0.95 }}
+										animate={{ opacity: 1, y: 0, scale: 1 }}
+										transition={{ duration: 0.3, ease: "easeOut" }}
+										className={cn(
+											"flex items-center gap-3 px-4 py-3 rounded-xl",
+											"bg-muted/30",
+											"border-l-4 border-l-red-400",
+											"shadow-sm"
+										)}
+									>
+										<div className="p-2 rounded-lg bg-muted/50 text-red-400">
+											<Trash2 className="w-4 h-4" />
+										</div>
+										<span className="text-sm text-muted-foreground font-medium">Deleted todo</span>
+										<Badge variant="destructive" className="font-semibold shadow-sm">
+											Removed
+										</Badge>
+									</motion.div>
+								);
+							}
+
+							// Handle GetTodos tool
+							if (tool.tool === "GetTodos") {
+								return (
+									<motion.div
+										initial={{ opacity: 0, y: 8, scale: 0.95 }}
+										animate={{ opacity: 1, y: 0, scale: 1 }}
+										transition={{ duration: 0.3, ease: "easeOut" }}
+										className={cn(
+											"flex items-center gap-3 px-4 py-3 rounded-xl",
+											"bg-muted/30",
+											"border-l-4 border-l-violet-500",
+											"shadow-sm"
+										)}
+									>
+										<div className="p-2 rounded-lg bg-muted/50 text-violet-500">
+											<ListTodo className="w-4 h-4" />
+										</div>
+										<span className="text-sm text-muted-foreground font-medium">
+											Retrieved todos
+										</span>
+										<Badge
+											variant="outline"
+											className="text-violet-500 border-violet-500/50 font-semibold"
+										>
+											<Info className="w-3 h-3 mr-1.5" />
+											View
 										</Badge>
 									</motion.div>
 								);

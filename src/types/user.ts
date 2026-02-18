@@ -22,19 +22,6 @@ export interface HistoryReflection extends HistoryData {
 	reflection: Reflection;
 }
 
-export type ModelDefinition = {
-	id: string;
-	name: string;
-	description: string;
-	in_cost: number;
-	out_cost: number;
-	stats: {
-		cost: number; //0-1
-		speed: number; //0-1
-		quality: number; //0-1
-	};
-};
-
 export type UserProfile = {
 	profile: string;
 	goal: string;
@@ -48,7 +35,6 @@ export type ConditioningPlan = {
 	user: string;
 	coach: string;
 	interview: string;
-	reflection: string;
 };
 
 export type UserInfo = {
@@ -88,6 +74,13 @@ export type CoachTrait =
 	| "pushing" // Expands on the users goals and takes them further
 	| "assertive"; // Act without the users knowledge / doesnt tell the user what exactly it is doing
 
+export type CoachPersonality =
+	| "trainer" // Focused on skill-building and performance
+	| "mentor" // Wise guide sharing knowledge and experience
+	| "ally" // Partner working alongside you as a teammate
+	| "challenger" // Pushes limits and questions assumptions
+	| "supporter"; // Nurturing presence prioritizing emotional support
+
 export type HypnoStyle = "authoritarian" | "permissive" | "balanced";
 
 export type InductionType = "progressive_relaxation" | "visualization" | "breathing";
@@ -108,6 +101,7 @@ export type AppSettings = {
 	main_model?: string;
 	tts_engine?: TTSEngine;
 	coach_traits?: CoachTrait[];
+	coach_personality?: CoachPersonality;
 	hypno_style?: HypnoStyleConfig;
 	embedding_engine?: LLMEngine;
 	embedding_model?: string;
@@ -205,4 +199,30 @@ export type Challenge = {
 	completed: boolean;
 	created_at: Date;
 	completed_at?: Date;
+};
+
+export type Todo = {
+	id?: RecordId;
+	title: string;
+	content: string;
+	weekdays?: number[];
+	created_at: Date;
+	updated_at: Date;
+};
+
+export type TodoCompletion = {
+	id?: RecordId;
+	todo_id: RecordId;
+	date: string;
+	completed: boolean;
+	completed_at?: Date;
+};
+
+export type TodoWithStatus = Todo & {
+	completed_today: boolean;
+	completion_stats: {
+		total_days: number;
+		completed_days: number;
+		completion_rate: number;
+	};
 };

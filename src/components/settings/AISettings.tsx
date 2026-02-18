@@ -84,6 +84,9 @@ export function AISettings() {
 							<SelectItem value="meituan/longcat-flash-chat">
 								LongCat Flash Chat (Meituan)
 							</SelectItem>
+							<SelectItem value="stepfun/step-3.5-flash:free">
+								Step 3.5 Flash (StepFun|Free)
+							</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>

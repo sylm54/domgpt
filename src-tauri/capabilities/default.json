@@ -12,7 +12,6 @@
 		"fs:allow-app-write",
 		"clipboard-manager:allow-read-text",
 		"clipboard-manager:allow-write-text",
-
 		"http:default",
 		{
 			"identifier": "http:default",
