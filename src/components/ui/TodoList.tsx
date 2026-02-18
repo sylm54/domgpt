@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import type { TodoWithStatus } from "@/types/user";
 import { Checkbox } from "./checkbox";
+import { useDeleteTodo } from "@/data/todos";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -18,6 +19,7 @@ interface TodoItemProps {
 }
 
 function TodoItem({ todo, onToggle }: TodoItemProps) {
+	const deleteTodo = useDeleteTodo();
 	return (
 		<motion.div
 			initial={{ opacity: 0, x: -10 }}
@@ -28,6 +30,17 @@ function TodoItem({ todo, onToggle }: TodoItemProps) {
 				todo.completed_today ? "bg-emerald-500/10" : "bg-muted/30"
 			)}
 		>
+			<button
+				type="button"
+				onClick={(e) => {
+					e.stopPropagation();
+					if (confirm("Delete todo?")) deleteTodo(todo.id);
+				}}
+				className="text-xs text-red-500 hover:text-red-600"
+				aria-label="Delete todo"
+			>
+				Delete
+			</button>
 			<Checkbox
 				checked={todo.completed_today}
 				onCheckedChange={onToggle}
@@ -80,6 +93,7 @@ interface TodoListProps {
 
 export function TodoList({ todos, onToggle }: TodoListProps) {
 	const today = new Date().getDay();
+
 	const activeTodos = todos?.filter((todo) => {
 		if (!todo.weekdays || todo.weekdays.length === 0) return true;
 		return todo.weekdays.includes(today);

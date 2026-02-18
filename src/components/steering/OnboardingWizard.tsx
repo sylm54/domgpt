@@ -635,6 +635,7 @@ function APIKeysStep() {
 							<SelectItem value="x-ai/grok-4.1-fast">Grok 4.1 Fast (Speedy)</SelectItem>
 							<SelectItem value="deepseek/deepseek-v3.2-exp">DeepSeek v3.2 Experimental</SelectItem>
 							<SelectItem value="deepseek/deepseek-v3.2">DeepSeek v3.2</SelectItem>
+							<SelectItem value="stepfun/step-3.5-flash:free">Step 3.5 Flash (Free)</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>

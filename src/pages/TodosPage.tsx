@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { TodoList, TodoListHeader } from "@/components/ui/TodoList";
-import { useTodos, useToggleTodo } from "@/data/todos";
+import { useDeleteTodo, useTodos, useToggleTodo } from "@/data/todos";
 import type { TodoWithStatus } from "@/types/user";
 
 export function TodosPage() {
