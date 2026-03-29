@@ -1,9 +1,8 @@
-import { ChevronDown, Clock, MessageSquare, Sparkles, Star, Zap } from "lucide-react";
+import { ChevronDown, Clock, MessageSquare, Sparkles, Star, Target, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { HistoryItem } from "@/types/user";
-import { isLegacyReflection, isSocraticReflection } from "@/types/user";
 
 interface HistoryTimelineProps {
 	history: HistoryItem[];
@@ -71,8 +70,11 @@ function TimelineItem({
 	isRecent,
 	totalItems,
 }: TimelineItemProps) {
-	const isSession = item.type === "session";
-	const Icon = isSession ? Zap : MessageSquare;
+	const isHypnoSession = item.type === "session_hypno";
+	const isChallengeSession = item.type === "challenge_session";
+	const isReflectionSession = item.type === "reflection_session";
+
+	const Icon = isHypnoSession ? Zap : isChallengeSession ? Target : MessageSquare;
 	const isLast = index === totalItems - 1;
 
 	return (
@@ -171,13 +173,12 @@ function TimelineItem({
 						<div className="flex-1">
 							<div className="flex items-center gap-2 mb-2">
 								<h4 className="font-semibold text-sm text-pink-400">
-									{isSession ? "Hypnosis Session" : "Reflection"}
+									{isHypnoSession
+										? "Hypnosis Session"
+										: isChallengeSession
+											? "Challenge"
+											: "Reflection"}
 								</h4>
-								{isSession && item.session_type && (
-									<span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-pink-500/20 text-pink-300 border border-pink-500/30">
-										{item.session_type}
-									</span>
-								)}
 							</div>
 							{/* Time badge */}
 							<div
@@ -193,7 +194,7 @@ function TimelineItem({
 								<span className="text-xs text-muted-foreground/50">•</span>
 								<span className="text-xs text-muted-foreground/70">{formatTime(item.time)}</span>
 							</div>
-							{isSession && item.extra && (
+							{isHypnoSession && item.extra && (
 								<p className="mt-2 text-xs text-foreground/90">{item.extra}</p>
 							)}
 						</div>
@@ -217,122 +218,99 @@ function TimelineItem({
 								className="overflow-hidden"
 							>
 								<div className="pt-4 mt-3 border-t space-y-4 border-pink-500/20">
-									{isSession ? (
+									{isHypnoSession && item.debrief && (
 										<>
-											{item.debrief &&
-												isLegacyReflection(item.debrief) &&
-												item.debrief.questions.map((q, idx) => (
-													<motion.div
-														key={`${item.id?.toString() || index}-debrief-${idx}`}
-														initial={{ opacity: 0, y: 10 }}
-														animate={{ opacity: 1, y: 0 }}
-														transition={{ delay: idx * 0.05 }}
-														className="space-y-2"
-													>
-														<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
-															<span className="w-1 h-1 rounded-full bg-pink-400" />
-															{q.question}
-														</p>
-														{q.type === "rating" ? (
-															<div className="pl-3">
-																<RatingDisplay rating={Number(q.answer)} />
-															</div>
-														) : (
-															<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
-																<p className="text-xs text-muted-foreground italic">
-																	"{q.answer as string}"
-																</p>
-															</div>
-														)}
-													</motion.div>
-												))}
-											{item.debrief && isSocraticReflection(item.debrief) && (
+											{item.debrief.map((q, idx) => (
+												<motion.div
+													key={`${item.id?.toString() || index}-debrief-${idx}`}
+													initial={{ opacity: 0, y: 10 }}
+													animate={{ opacity: 1, y: 0 }}
+													transition={{ delay: idx * 0.05 }}
+													className="space-y-2"
+												>
+													<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
+														<span className="w-1 h-1 rounded-full bg-pink-400" />
+														{q.question}
+													</p>
+													{q.type === "rating" ? (
+														<div className="pl-3">
+															<RatingDisplay rating={Number(q.answer)} maxRating={q.scale} />
+														</div>
+													) : q.type === "multiple_choice" ? (
+														<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
+															<p className="text-xs text-muted-foreground">{q.answer}</p>
+														</div>
+													) : (
+														<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
+															<p className="text-xs text-muted-foreground italic">"{q.answer}"</p>
+														</div>
+													)}
+												</motion.div>
+											))}
+										</>
+									)}
+									{isChallengeSession && item.user_report && (
+										<motion.div
+											initial={{ opacity: 0, y: 10 }}
+											animate={{ opacity: 1, y: 0 }}
+											className="space-y-2"
+										>
+											<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
+												<span className="w-1 h-1 rounded-full bg-amber-400" />
+												User Report
+											</p>
+											<div className="pl-4 py-3 rounded-lg bg-gradient-to-r from-amber-500/5 to-transparent border-l-2 border-amber-500/40">
+												<p className="text-xs text-muted-foreground leading-relaxed">
+													{item.user_report}
+												</p>
+											</div>
+										</motion.div>
+									)}
+									{isReflectionSession && (
+										<>
+											{item.report && (
 												<motion.div
 													initial={{ opacity: 0, y: 10 }}
 													animate={{ opacity: 1, y: 0 }}
-													className="space-y-3"
+													className="space-y-2"
 												>
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500/5 to-transparent border-l-2 border-emerald-500/40">
-														<p className="text-xs font-medium text-emerald-600 mb-1">Conducive:</p>
-														<p className="text-xs text-muted-foreground">
-															{item.debrief.summary.conducive_thoughts.join("; ")}
-														</p>
-													</div>
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-rose-500/5 to-transparent border-l-2 border-rose-500/40">
-														<p className="text-xs font-medium text-rose-600 mb-1">Not Conducive:</p>
-														<p className="text-xs text-muted-foreground">
-															{item.debrief.summary.not_conducive_thoughts.join("; ")}
-														</p>
-													</div>
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/5 to-transparent border-l-2 border-amber-500/40">
-														<p className="text-xs font-medium text-amber-600 mb-1">Key Insights:</p>
-														<p className="text-xs text-muted-foreground italic">
-															"{item.debrief.summary.key_insights}"
+													<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
+														<span className="w-1 h-1 rounded-full bg-emerald-400" />
+														Report
+													</p>
+													<div className="pl-4 py-3 rounded-lg bg-gradient-to-r from-emerald-500/5 to-transparent border-l-2 border-emerald-500/40">
+														<p className="text-xs text-muted-foreground leading-relaxed">
+															{item.report}
 														</p>
 													</div>
 												</motion.div>
 											)}
-										</>
-									) : (
-										<>
-											{isLegacyReflection(item.reflection) &&
-												item.reflection.questions.map((q, idx) => (
-													<motion.div
-														key={`${item.id?.toString() || index}-reflection-${idx}`}
-														initial={{ opacity: 0, y: 10 }}
-														animate={{ opacity: 1, y: 0 }}
-														transition={{ delay: idx * 0.05 }}
-														className="space-y-2"
-													>
-														<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
-															<span className="w-1 h-1 rounded-full bg-pink-400" />
-															{q.question}
-														</p>
-														{q.type === "rating" ? (
-															<div className="pl-3">
-																<RatingDisplay rating={Number(q.answer)} />
-															</div>
-														) : (
-															<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-pink-500/5 to-transparent border-l-2 border-pink-500/40">
-																<p className="text-xs text-muted-foreground italic">
-																	"{q.answer as string}"
-																</p>
-															</div>
-														)}
-													</motion.div>
-												))}
-											{isSocraticReflection(item.reflection) && (
+											{item.chat && item.chat.length > 0 && (
 												<motion.div
 													initial={{ opacity: 0, y: 10 }}
 													animate={{ opacity: 1, y: 0 }}
 													className="space-y-3"
 												>
-													<p className="text-xs text-muted-foreground italic mb-2">
-														{item.reflection.summary.conversation_summary}
+													<p className="text-xs font-medium text-foreground/90 flex items-center gap-2">
+														<span className="w-1 h-1 rounded-full bg-blue-400" />
+														Conversation
 													</p>
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500/5 to-transparent border-l-2 border-emerald-500/40">
-														<p className="text-xs font-medium text-emerald-600 mb-1">
-															Conducive Thoughts (
-															{item.reflection.summary.conducive_thoughts.length})
-														</p>
-														<p className="text-xs text-muted-foreground">
-															{item.reflection.summary.conducive_thoughts.join("; ")}
-														</p>
-													</div>
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-rose-500/5 to-transparent border-l-2 border-rose-500/40">
-														<p className="text-xs font-medium text-rose-600 mb-1">
-															Not Conducive ({item.reflection.summary.not_conducive_thoughts.length}
-															)
-														</p>
-														<p className="text-xs text-muted-foreground">
-															{item.reflection.summary.not_conducive_thoughts.join("; ")}
-														</p>
-													</div>
-													<div className="pl-4 py-2 rounded-lg bg-gradient-to-r from-amber-500/5 to-transparent border-l-2 border-amber-500/40">
-														<p className="text-xs font-medium text-amber-600 mb-1">Key Insights:</p>
-														<p className="text-xs text-muted-foreground italic">
-															"{item.reflection.summary.key_insights}"
-														</p>
+													<div className="space-y-2 pl-4">
+														{item.chat.map((msg, idx) => (
+															<div
+																key={`${item.id?.toString() || index}-chat-${idx}`}
+																className={cn(
+																	"p-2 rounded-lg max-w-[90%]",
+																	msg.role === "user"
+																		? "bg-blue-500/10 border border-blue-500/20 ml-auto"
+																		: "bg-gradient-to-r from-emerald-500/5 to-transparent border-l-2 border-emerald-500/40"
+																)}
+															>
+																<p className="text-xs text-muted-foreground leading-relaxed">
+																	{msg.content}
+																</p>
+															</div>
+														))}
 													</div>
 												</motion.div>
 											)}

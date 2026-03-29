@@ -10,25 +10,29 @@ fn init_logging() {
     android_logger::init_once(
         android_logger::Config::default()
             .with_max_level(log::LevelFilter::Debug)
-            .with_tag("domgpt")
+            .with_tag("domgpt"),
     );
     log::info!("Android logging initialized");
 }
 
 #[cfg(target_os = "android")]
 fn init_ort() {
-    if let Ok(ort_dir) = std::env::var("ORT_LIB_LOCATION") {
-        log::info!("ORT library path: {}", ort_dir);
-    } else {
-        log::info!("ORT_LIB_LOCATION not set - using default library search");
-    }
+    ort::init()
+        .with_name("my_tauri_app")
+        .commit()
+        .expect("Failed to initialize ORT");
 }
 
 #[cfg(not(target_os = "android"))]
 fn init_logging() {}
 
 #[cfg(not(target_os = "android"))]
-fn init_ort() {}
+fn init_ort() {
+    ort::init()
+        .with_name("my_tauri_app")
+        .commit()
+        .expect("Failed to initialize ORT");
+}
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -39,7 +43,7 @@ fn greet(name: &str) -> String {
 pub fn run() {
     init_logging();
     init_ort();
-    
+
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_fs::init())

@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSubliminalFileById } from "@/data/subliminal";
-import { SessionPlayer } from "../components/subliminal";
+// import { SessionPlayer } from "../components/subliminal";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 
@@ -55,9 +55,7 @@ export function SubliminalPlayPage() {
 					Back
 				</Button>
 			</div>
-			<div className="flex-1 min-h-0">
-				<SessionPlayer subliminal={subliminal} />
-			</div>
+			<div className="flex-1 min-h-0">{/*<SessionPlayer subliminal={subliminal} />*/}</div>
 		</div>
 	);
 }

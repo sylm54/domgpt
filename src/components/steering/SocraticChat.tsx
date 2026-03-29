@@ -1,19 +1,20 @@
 import { Brain, CheckCircle2, Lightbulb, MessageSquare, Sparkles } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { useLogHistoryData } from "@/data/history";
-import { useCreateMemory } from "@/data/memory";
 import { useProfileStore } from "@/data/profile";
-import { useEmbeddingModel } from "@/data/settings";
 import { cn } from "@/lib/utils";
-import { SocraticAgent } from "../../lib/agent";
+import { Agent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
 import { tool } from "../../lib/models";
-import type { ReflectionSummary, ThoughtAnalysis } from "../../types/user";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Chat } from "../ui/shadcn-io/ai/chat";
+import { useQueryDatabaseTool } from "@/data/tools/query-database";
+import { useProfileReadTool } from "@/data/tools/profile-tools";
+import { useScratchpadTool } from "@/data/tools/scratchpad";
+import { getReflectionPrompt } from "@/prompts/reflection";
 
 interface SocraticChatProps {
 	model: Model;
@@ -22,71 +23,38 @@ interface SocraticChatProps {
 
 export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 	const logHistoryData = useLogHistoryData();
-	const [agent, setAgent] = useState<SocraticAgent | null>(null);
+	const [agent, setAgent] = useState<Agent | null>(null);
 	const [isComplete, setIsComplete] = useState(false);
-	const [summary, setSummary] = useState<ReflectionSummary | null>(null);
+	const [summary, setSummary] = useState<string | null>(null);
 	const { profile } = useProfileStore();
 	const [loading, setLoading] = useState(true);
-	const [thoughtAnalysis, setThoughtAnalysis] = useState<ThoughtAnalysis[]>([]);
-	const createMemory = useCreateMemory();
-	const { model: embeddingModel, modelName: embeddingModelName } = useEmbeddingModel();
+	const [scratchpad, scratchpadTool] = useScratchpadTool("reflection");
+	const readProfile = useProfileReadTool();
+	const queryDatabase = useQueryDatabaseTool();
 
 	useEffect(() => {
-		const socraticAgent = new SocraticAgent(model);
+		const socraticAgent = new Agent(model);
 		setAgent(socraticAgent);
 	}, [model]);
 
 	const tools = useMemo(
 		() => [
-			tool({
-				name: "AnalyzeThought",
-				description: "Analyze a thought as conducive or not conducive to goals",
-				schema: {
-					thought: z.string().describe("The thought to analyze"),
-					is_conducive: z
-						.boolean()
-						.describe("Whether this thought is conducive to the user's goals"),
-					reframed: z.string().optional().describe("If not conducive, provide a reframed version"),
-				},
-				call: async ({ thought, is_conducive, reframed }) => {
-					setThoughtAnalysis((prev) => [
-						...prev,
-						{
-							thought,
-							is_conducive,
-							reframed,
-						},
-					]);
-					return `Thought recorded: ${is_conducive ? "Conducive" : "Not conducive"}`;
-				},
-			}),
+			readProfile,
+			queryDatabase,
+			scratchpadTool,
 			tool({
 				name: "CompleteSession",
-				description: "Complete the reflection session and save the summary",
+				description: "Complete the reflection session and save the report",
 				schema: {
-					conducive_thoughts: z.array(z.string()).describe("List of conducive thoughts identified"),
-					not_conducive_thoughts: z
-						.array(z.string())
-						.describe("List of non-conducive thoughts identified"),
-					key_insights: z.string().describe("Key insights from the session"),
-					conversation_summary: z.string().describe("Brief summary of the conversation"),
+					report: z.string().describe("Brief summary of the conversation"),
 				},
-				call: async ({
-					conducive_thoughts,
-					not_conducive_thoughts,
-					key_insights,
-					conversation_summary,
-				}) => {
-					const reflectionSummary: ReflectionSummary = {
-						conducive_thoughts,
-						not_conducive_thoughts,
-						key_insights,
-						conversation_summary,
-					};
-					setSummary(reflectionSummary);
+				call: async ({ report }) => {
+					if (isComplete) {
+						return "Session already completed.";
+					}
+					setSummary(report);
 					setIsComplete(true);
 
-					// Get conversation history from agent
 					const conversation =
 						agent?.context.conversation.map((msg) => ({
 							role: msg.type as "user" | "assistant",
@@ -95,78 +63,30 @@ export function SocraticChat({ model, onComplete }: SocraticChatProps) {
 
 					// Save to history
 					await logHistoryData({
-						type: "reflection",
-						reflection: {
-							conversation,
-							thought_analysis: thoughtAnalysis,
-							summary: reflectionSummary,
-							created_at: new Date().toISOString(),
-						},
+						type: "reflection_session",
 						time: new Date(),
+						chat: conversation,
+						report,
 					});
 
 					return "Reflection session saved successfully.";
 				},
 			}),
-			tool({
-				name: "CreateMemory",
-				description: "Store important insights about the user's thoughts or patterns in memory",
-				schema: {
-					content: z.string().describe("The information to store in memory"),
-					importance: z
-						.number()
-						.min(1)
-						.max(10)
-						.describe("Importance rating from 1-10 (higher is more important)"),
-				},
-				call: async ({ content, importance }) => {
-					if (!embeddingModel) {
-						return "Memory creation skipped: embedding model not configured";
-					}
-					await createMemory(content, importance, embeddingModelName, embeddingModel.openRouter);
-					return `Memory created successfully with importance ${importance}/10`;
-				},
-			}),
 		],
-		[thoughtAnalysis, logHistoryData, agent, embeddingModel, embeddingModelName, createMemory]
+		[logHistoryData, agent, readProfile, queryDatabase, scratchpadTool]
 	);
 
 	useEffect(() => {
 		if (agent) {
 			const originalAct = agent.act.bind(agent);
 			agent.act = async (message, _, onProgress) => {
-				const ragOptions = embeddingModel
-					? {
-							enableRAG: true,
-							embeddingModel: embeddingModelName,
-							openRouter: embeddingModel,
-						}
-					: undefined;
-				return originalAct(message, tools, onProgress, ragOptions);
+				return originalAct(message, tools, onProgress);
 			};
 
-			// Set system prompt with profile context
-			const systemPrompt = `You are a Socratic Reflection Agent helping the user examine their thoughts and thought patterns.
-
-USER PROFILE:
-${profile?.profile || "No profile set yet."}
-
-USER GOAL:
-${profile?.goal || "No goal set yet."}
-
-Your task is to:
-1. Start with a warm, open-ended question about their recent experiences or current state
-2. Use socratic questioning to help them examine their thoughts deeply
-3. When you identify a thought that supports their goals, use AnalyzeThought tool with is_conducive=true
-4. When you identify a thought that hinders their goals, use AnalyzeThought tool with is_conducive=false and provide a reframed version
-5. After some meaningful exchanges, use CompleteSession to summarize
-
-`;
-
-			agent.setSystemPrompt(systemPrompt);
+			agent.setSystemPrompt(getReflectionPrompt(profile, scratchpad));
 			setLoading(false);
 		}
-	}, [agent, tools, profile, embeddingModel, embeddingModelName]);
+	}, [agent]);
 
 	if (loading) {
 		return (
@@ -257,81 +177,8 @@ Your task is to:
 								<MessageSquare className="w-5 h-5 text-violet-500" />
 								<h3 className="font-semibold">Session Summary</h3>
 							</div>
-							<p className="text-muted-foreground text-sm leading-relaxed">
-								{summary.conversation_summary}
-							</p>
+							<p className="text-muted-foreground text-sm leading-relaxed">{summary}</p>
 						</motion.div>
-
-						{/* Key Insights */}
-						<motion.div
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.2 }}
-							className="bg-amber-500/10 rounded-xl p-5 border border-amber-500/20"
-						>
-							<div className="flex items-center gap-2 mb-3">
-								<Lightbulb className="w-5 h-5 text-amber-500" />
-								<h3 className="font-semibold">Key Insights</h3>
-							</div>
-							<p className="text-muted-foreground text-sm leading-relaxed">
-								{summary.key_insights}
-							</p>
-						</motion.div>
-
-						{/* Thought Analysis */}
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							{/* Conducive Thoughts */}
-							<motion.div
-								initial={{ opacity: 0, x: -20 }}
-								animate={{ opacity: 1, x: 0 }}
-								transition={{ delay: 0.3 }}
-								className="bg-emerald-500/10 rounded-xl p-5 border border-emerald-500/20"
-							>
-								<div className="flex items-center gap-2 mb-3">
-									<div className="w-2 h-2 bg-emerald-500 rounded-full" />
-									<h3 className="font-semibold text-emerald-700">
-										Conducive Thoughts ({summary.conducive_thoughts.length})
-									</h3>
-								</div>
-								<ul className="space-y-2">
-									{summary.conducive_thoughts.map((thought, idx) => (
-										<li
-											key={thought}
-											className="text-sm text-muted-foreground flex items-start gap-2"
-										>
-											<span className="text-emerald-500 mt-0.5">✓</span>
-											<span>{thought}</span>
-										</li>
-									))}
-								</ul>
-							</motion.div>
-
-							{/* Not Conducive Thoughts */}
-							<motion.div
-								initial={{ opacity: 0, x: 20 }}
-								animate={{ opacity: 1, x: 0 }}
-								transition={{ delay: 0.4 }}
-								className="bg-rose-500/10 rounded-xl p-5 border border-rose-500/20"
-							>
-								<div className="flex items-center gap-2 mb-3">
-									<div className="w-2 h-2 bg-rose-500 rounded-full" />
-									<h3 className="font-semibold text-rose-700">
-										Not Conducive ({summary.not_conducive_thoughts.length})
-									</h3>
-								</div>
-								<ul className="space-y-2">
-									{summary.not_conducive_thoughts.map((thought, idx) => (
-										<li
-											key={thought}
-											className="text-sm text-muted-foreground flex items-start gap-2"
-										>
-											<span className="text-rose-500 mt-0.5">•</span>
-											<span>{thought}</span>
-										</li>
-									))}
-								</ul>
-							</motion.div>
-						</div>
 
 						{/* Restart Button */}
 						<motion.div
@@ -344,7 +191,6 @@ Your task is to:
 								onClick={() => {
 									setIsComplete(false);
 									setSummary(null);
-									setThoughtAnalysis([]);
 									if (agent) {
 										agent.clearConversation();
 										agent.addAgentMessage(

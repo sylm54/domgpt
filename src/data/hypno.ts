@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { HistoryItem, HypnoFile, UserInfo, UserProfile } from "../types/user";
+import type { HistoryItem, HypnoFile, UserProfile } from "../types/user";
 import { useLiveQuery, useSurreal } from "./surreal";
 import { RecordId } from "surrealdb";
 

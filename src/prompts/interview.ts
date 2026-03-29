@@ -21,10 +21,10 @@ You have access to tools to:
 - AskOpenText: Get open-ended responses
 
 ## Current User Profile:
-${profile.profile}
+${profile.data.profile}
 
 ## Current Goal:
-${profile.plan.interview || profile.plan.hypno}
+${profile.data.plan.interview || profile.data.plan.hypno}
 
 ## History:
 ${history || "No prior history available."}

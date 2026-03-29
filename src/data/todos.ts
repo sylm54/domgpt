@@ -1,58 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import type { RecordId } from "surrealdb";
+
 import type { Todo, TodoCompletion, TodoWithStatus } from "../types/user";
 import { useSurreal } from "./surreal";
+import { useProfileStore } from "./profile";
 
 function getTodayString(): string {
 	return new Date().toISOString().split("T")[0];
-}
-
-function isTodoActiveToday(todo: Todo): boolean {
-	if (!todo.weekdays || todo.weekdays.length === 0) return true;
-	const today = new Date().getDay();
-	return todo.weekdays.includes(today);
-}
-
-export function useWriteTodo() {
-	const surreal = useSurreal();
-
-	return useCallback(
-		async (todo: Partial<Todo> & { title: string; content: string }) => {
-			const now = new Date();
-			if (todo.id) {
-				const updated = {
-					...todo,
-					updated_at: now,
-				} as Todo;
-				await surreal.upsert(todo.id, updated);
-				return updated;
-			}
-			const newTodo: Todo = {
-				title: todo.title,
-				content: todo.content,
-				weekdays: todo.weekdays,
-				created_at: now,
-				updated_at: now,
-			};
-			const [result] = await surreal.insert<Todo>("todos", newTodo);
-			return result;
-		},
-		[surreal]
-	);
-}
-
-export function useDeleteTodo() {
-	const surreal = useSurreal();
-
-	return useCallback(
-		async (todoId: RecordId) => {
-			await surreal.delete(todoId);
-			await surreal.query("DELETE FROM todo_completion WHERE todo_id = $todo_id", {
-				todo_id: todoId,
-			});
-		},
-		[surreal]
-	);
 }
 
 export function useTodos(): {
@@ -60,8 +13,9 @@ export function useTodos(): {
 	refetch: () => void;
 } {
 	const surreal = useSurreal();
+	const getProfile = useProfileStore((state) => state.getProfile);
 	const [todos, setTodos] = useState<TodoWithStatus[] | undefined>(undefined);
-	const [refetchCounter, setRefetchCounter] = useState(0);
+	const [, forceUpdate] = useState({});
 
 	useEffect(() => {
 		let cancelled = false;
@@ -69,50 +23,61 @@ export function useTodos(): {
 			const today = getTodayString();
 			const todayWeekday = new Date().getDay();
 
-			const todosResult = await surreal.query<[Todo[]]>(`
-				SELECT * FROM todos ORDER BY created_at ASC
-			`);
+			// Get todos from profile
+			const profile = getProfile();
+			if (!profile) return;
 
+			const todosFromProfile = profile.data.todos;
+
+			// Get completions from SurrealDB
 			const completionsResult = await surreal.query<[TodoCompletion[]]>(`
 				SELECT * FROM todo_completion
 			`);
 
 			if (cancelled) return;
 
-			const todos = todosResult[0] || [];
 			const completions = completionsResult[0] || [];
 
-			const todosWithStatus: TodoWithStatus[] = todos.map((todo) => {
-				const todoCompletions = completions.filter(
-					(c) => c.todo_id.toString() === todo.id?.toString()
-				);
+			// Convert profile todos to TodoWithStatus
+			const todosWithStatus: TodoWithStatus[] = Object.entries(todosFromProfile).map(
+				([id, todoData]) => {
+					const todoCompletions = completions.filter((c) => c.todo_id.toString() === id);
 
-				const todayCompletion = todoCompletions.find((c) => c.date === today);
-				const isActiveToday =
-					!todo.weekdays || todo.weekdays.length === 0 || todo.weekdays.includes(todayWeekday);
+					const todayCompletion = todoCompletions.find((c) => c.date === today);
+					const isActiveToday =
+						!todoData.weekdays ||
+						todoData.weekdays.length === 0 ||
+						todoData.weekdays.includes(todayWeekday);
 
-				const completedToday = isActiveToday && todayCompletion?.completed === true;
+					const completedToday = isActiveToday && todayCompletion?.completed === true;
 
-				const applicableDays = todoCompletions.filter((c) => {
-					if (!todo.weekdays || todo.weekdays.length === 0) return true;
-					const date = new Date(c.date);
-					return todo.weekdays.includes(date.getDay());
-				});
+					const applicableDays = todoCompletions.filter((c) => {
+						if (!todoData.weekdays || todoData.weekdays.length === 0) return true;
+						const date = new Date(c.date);
+						return todoData.weekdays.includes(date.getDay());
+					});
 
-				const totalDays = applicableDays.length;
-				const completedDays = applicableDays.filter((c) => c.completed).length;
-				const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
+					const totalDays = applicableDays.length;
+					const completedDays = applicableDays.filter((c) => c.completed).length;
+					const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
 
-				return {
-					...todo,
-					completed_today: completedToday,
-					completion_stats: {
-						total_days: totalDays,
-						completed_days: completedDays,
-						completion_rate: completionRate,
-					},
-				};
-			});
+					return {
+						id,
+						...todoData,
+						completed_today: completedToday,
+						completion_stats: {
+							total_days: totalDays,
+							completed_days: completedDays,
+							completion_rate: completionRate,
+						},
+					};
+				}
+			);
+
+			// Sort by created_at
+			todosWithStatus.sort(
+				(a, b) => (a.created_at?.getTime() || 0) - (b.created_at?.getTime() || 0)
+			);
 
 			setTodos(todosWithStatus);
 		}
@@ -122,10 +87,10 @@ export function useTodos(): {
 		return () => {
 			cancelled = true;
 		};
-	}, [surreal, refetchCounter]);
+	}, [surreal, getProfile]);
 
 	const refetch = useCallback(() => {
-		setRefetchCounter((c) => c + 1);
+		forceUpdate({});
 	}, []);
 
 	return { todos, refetch };
@@ -144,20 +109,24 @@ export function useToggleTodo() {
 			);
 
 			const completion = existing[0];
+			if (!completion) return;
 			const now = new Date();
 
 			if (completion) {
+				if (!completion.id) return;
 				const updated: TodoCompletion = {
 					...completion,
 					completed: !completion.completed,
 					completed_at: !completion.completed ? now : undefined,
 				};
-				await surreal.upsert(completion.id!, updated);
+				await surreal.upsert(completion.id, updated);
 				return updated;
 			}
 
+			if (!todo.id) return;
+
 			const newCompletion: TodoCompletion = {
-				todo_id: todo.id!,
+				todo_id: todo.id,
 				date: today,
 				completed: true,
 				completed_at: now,
@@ -171,25 +140,27 @@ export function useToggleTodo() {
 
 export function useGetTodoStats() {
 	const surreal = useSurreal();
+	const getProfile = useProfileStore((state) => state.getProfile);
 
 	return useCallback(async () => {
-		const todosResult = await surreal.query<[Todo[]]>(`SELECT * FROM todos`);
+		const profile = getProfile();
+		if (!profile) return [];
+
+		const todosFromProfile = profile.data.todos;
+
 		const completionsResult = await surreal.query<[TodoCompletion[]]>(
 			`SELECT * FROM todo_completion`
 		);
 
-		const todos = todosResult[0] || [];
 		const completions = completionsResult[0] || [];
 
-		const stats = todos.map((todo) => {
-			const todoCompletions = completions.filter(
-				(c) => c.todo_id.toString() === todo.id?.toString()
-			);
+		const stats = Object.entries(todosFromProfile).map(([id, todoData]) => {
+			const todoCompletions = completions.filter((c) => c.todo_id.toString() === id);
 
 			const applicableDays = todoCompletions.filter((c) => {
-				if (!todo.weekdays || todo.weekdays.length === 0) return true;
+				if (!todoData.weekdays || todoData.weekdays.length === 0) return true;
 				const date = new Date(c.date);
-				return todo.weekdays.includes(date.getDay());
+				return todoData.weekdays.includes(date.getDay());
 			});
 
 			const totalDays = applicableDays.length;
@@ -197,10 +168,10 @@ export function useGetTodoStats() {
 			const completionRate = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
 
 			return {
-				id: todo.id,
-				title: todo.title,
-				content: todo.content,
-				weekdays: todo.weekdays,
+				id,
+				title: todoData.title,
+				content: todoData.content,
+				weekdays: todoData.weekdays,
 				total_days: totalDays,
 				completed_days: completedDays,
 				completion_rate: completionRate,
@@ -208,5 +179,5 @@ export function useGetTodoStats() {
 		});
 
 		return stats;
-	}, [surreal]);
+	}, [surreal, getProfile]);
 }

@@ -7,7 +7,7 @@ import { ReflectionSession } from "../components/steering";
 export function ReflectionPage() {
 	const { settings } = useSettingsStore();
 	const navigate = useNavigate();
-	const model = getLLMModel(settings.llm_engine, settings.main_model || "x-ai/grok-4.1-fast");
+	const model = settings.main_model ? getLLMModel(settings.llm_engines, settings.main_model) : null;
 	return (
 		<div className="relative h-full overflow-hidden bg-background">
 			{/* Content container */}

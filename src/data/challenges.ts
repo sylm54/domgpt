@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { RecordId } from "surrealdb";
-import type { Challenge, HistoryItem, HistorySession } from "../types/user";
+import type { Challenge, ChallengeSession, HistoryItem } from "../types/user";
 import { useSurreal } from "./surreal";
 
 export function useDeleteOpenChallenges() {
@@ -73,13 +73,12 @@ export function useCompleteChallenge() {
 			await surreal.upsert(challenge.id, completedChallenge);
 
 			// Add to history
-			const historyItem: HistorySession = {
+			const historyItem: ChallengeSession = {
 				id: undefined,
-				type: "session",
-				session_type: "challenge",
-				data: challenge.id || new RecordId("challenges", crypto.randomUUID()),
-				debrief: undefined,
+				type: "challenge_session",
+				data: challenge.id,
 				extra: challenge.description,
+				user_report: "",
 				time: new Date(),
 			};
 

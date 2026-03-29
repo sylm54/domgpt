@@ -14,7 +14,7 @@ export function HypnoNewPage() {
 		navigate(`/hypno/play/${session.id}`);
 	};
 
-	const model = getLLMModel(settings.llm_engine, settings.main_model);
+	const model = settings.main_model ? getLLMModel(settings.llm_engines, settings.main_model) : null;
 
 	return (
 		<div className="h-full p-4 flex flex-col">

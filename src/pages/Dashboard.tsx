@@ -28,6 +28,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 function isOnboardingCompleted(): boolean {
+	console.log(localStorage.getItem("onboardingCompleted") === "true");
 	return localStorage.getItem("onboardingCompleted") === "true";
 }
 
@@ -49,10 +50,12 @@ export function Dashboard() {
 	// Calculate statistics from history data
 	const stats = useMemo(
 		() => ({
-			totalSessions: loadingHistory ? 0 : history.filter((item) => item.type === "session").length,
+			totalSessions: loadingHistory
+				? 0
+				: history.filter((item) => item.type === "session_hypno").length,
 			totalReflections: loadingHistory
 				? 0
-				: history.filter((item) => item.type === "reflection").length,
+				: history.filter((item) => item.type === "reflection_session").length,
 			streak: loadingHistory ? 0 : calculateStreak(history),
 			lastActivity: loadingHistory
 				? "Loading..."
@@ -445,7 +448,7 @@ export function Dashboard() {
 					</div>
 				</motion.div>
 
-				{profile.plan && (
+				{profile.data.plan && (
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
@@ -466,7 +469,7 @@ export function Dashboard() {
 										<Target className="h-4 w-4" />
 										Plan Focus
 									</p>
-									<p className="text-base font-medium leading-relaxed">{profile.plan.user}</p>
+									<p className="text-base font-medium leading-relaxed">{profile.data.plan.hypno}</p>
 								</div>
 							</CardContent>
 						</Card>

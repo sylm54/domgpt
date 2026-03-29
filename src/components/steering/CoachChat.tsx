@@ -13,21 +13,19 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
-import { useGetPromptHistoryData } from "@/data/history";
-import { useAddInfo } from "@/data/info";
-import { useCreateMemory } from "@/data/memory";
-import { useProfileStore } from "@/data/profile";
-import { useEmbeddingModel, useSettingsStore } from "@/data/settings";
-import { useDeleteTodo, useGetTodoStats, useTodos, useWriteTodo } from "@/data/todos";
+import { useProfileReadTool, useProfileWriteTool } from "@/data/tools/profile-tools";
 import { cn } from "@/lib/utils";
 import { getCoachPrompt } from "@/prompts/coach";
-import { CoachAgent } from "../../lib/agent";
+import { Agent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
 import { tool } from "../../lib/models";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Chat } from "../ui/shadcn-io/ai/chat";
+import { useQueryDatabaseTool } from "@/data/tools/query-database";
+import { useProfileStore } from "@/data/profile";
+import { useScratchpadTool } from "@/data/tools/scratchpad";
 
 interface CoachChatProps {
 	model: Model;
@@ -79,38 +77,17 @@ function ToolActionCard({
 }
 
 export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }: CoachChatProps) {
-	const getPromptHistoryData = useGetPromptHistoryData();
-	const [agent, setAgent] = useState<CoachAgent | null>(null);
+	const [agent, setAgent] = useState<Agent | null>(null);
 	const [showCompleteButton, setShowCompleteButton] = useState(false);
-	const { profile, setProfile, updateProfile, updatePlan, getProfile } = useProfileStore();
-	const { settings } = useSettingsStore();
-	const addInfo = useAddInfo();
-	const createMemory = useCreateMemory();
-	const embeddingModelConfig = useEmbeddingModel();
-	const writeTodo = useWriteTodo();
-	const deleteTodo = useDeleteTodo();
-	const getTodoStats = useGetTodoStats();
-	const prevProfileRef = useRef(JSON.parse(JSON.stringify(profile ?? {})));
+	const profileReadTool = useProfileReadTool();
+	const profileWriteTool = useProfileWriteTool();
+	const queryDatabaseTool = useQueryDatabaseTool();
+	const profile = useProfileStore();
+	const [scratchpad, scratchpadTool] = useScratchpadTool("coach");
 	const [loading, setLoading] = useState(true);
-	useEffect(() => {
-		if (!isOnboarding) return;
-		if (profile) return;
-		setProfile({
-			goal: "",
-			plan: { hypno: "", challenges: "", user: "", interview: "", coach: "" },
-			profile: "",
-			created_at: new Date(),
-		});
-		prevProfileRef.current = {
-			goal: "",
-			plan: { hypno: "", challenges: "", user: "", interview: "" },
-			profile: "",
-			created_at: new Date(),
-		};
-	}, [isOnboarding, profile, setProfile]);
 
 	useEffect(() => {
-		const coachAgent = new CoachAgent(model);
+		const coachAgent = new Agent(model);
 
 		setAgent(coachAgent);
 	}, [model]);
@@ -118,248 +95,47 @@ export function CoachChat({ model, isOnboarding = false, onOnboardingComplete }:
 	// Define tools for the Coach Agent - memoized to prevent unnecessary re-renders
 	const tools = useMemo(
 		() => [
-			tool({
-				name: "SetData",
-				description: "Set user profile or goal data.",
-				schema: {
-					aspect: z.enum(["profile", "goal"]).describe("The aspect to set (profile or goal)"),
-					content: z.string().describe("string of the data to set"),
-				},
-				call: async ({ aspect, content }) => {
-					console.log("Profile:", profile);
-					switch (aspect) {
-						case "profile": {
-							updateProfile({
-								profile: content,
-							});
-							return `Profile updated successfully`;
-						}
-						case "goal": {
-							updateProfile({
-								goal: content,
-							});
-							return `Goal updated successfully`;
-						}
-						default:
-							return "Unknown aspect";
-					}
-				},
-			}),
-			tool({
-				name: "SetPlan",
-				description: "Set a specific feature's plan",
-				schema: {
-					feature: z
-						.enum(["hypno", "challenges", "user", "interview", "coach"])
-						.describe("The feature name)"),
-					plan: z.string().describe("The plan description for the feature"),
-				},
-				call: async ({ feature, plan }) => {
-					try {
-						console.log(getProfile());
-						updatePlan(feature, plan);
-						console.log(getProfile());
-						return `Plan for "${feature}" updated successfully`;
-					} catch (error) {
-						return `Error: ${error instanceof Error ? error.message : String(error)}`;
-					}
-				},
-			}),
-			tool({
-				name: "GetCurrentData",
-				description: "Get the current user profile, plan, and goal data",
-				schema: {},
-				call: async () => {
-					const profile = getProfile();
-					return JSON.stringify({
-						profile: profile?.profile,
-						plan: profile?.plan,
-						goal: profile?.goal,
-					});
-				},
-			}),
-			tool({
-				name: "Complete",
-				description: "Mark the coaching process as complete",
-				schema: {},
-				call: async (): Promise<string> => {
-					const profile = getProfile();
-					if (prevProfileRef.current.plan.user === profile.plan.user) {
-						prevProfileRef.current.plan.user += "warned";
-						return "You havent set/updated the user feature plan yet. If you are sure you dont want to set/update it ignore this message and call Complete again.";
-					}
-					if (prevProfileRef.current.plan.hypno === profile.plan.hypno) {
-						prevProfileRef.current.plan.hypno += "warned";
-						return "You havent set/updated the hypno feature plan yet. If you are sure you dont want to set/update it ignore this message and call Complete again.";
-					}
-					if (prevProfileRef.current.plan.challenges === profile.plan.challenges) {
-						prevProfileRef.current.plan.challenges += "warned";
-						return "You havent set/updated the challenges feature plan yet. If you are sure you dont want to set/update it ignore this message and call Complete again.";
-					}
-					if (prevProfileRef.current.plan.interview === profile.plan.interview) {
-						prevProfileRef.current.plan.interview += "warned";
-						return "You havent set/updated the interview feature plan yet. If you are sure you dont want to set/update it ignore this message and call Complete again.";
-					}
-					setShowCompleteButton(true);
-					return "Coaching process marked as complete.";
-				},
-			}),
-			tool({
-				name: "CreateMemory",
-				description: "Store important information about the user in memory for future reference",
-				schema: {
-					content: z.string().describe("The information to store in memory"),
-					importance: z
-						.number()
-						.min(1)
-						.max(10)
-						.describe("Importance rating from 1-10 (higher is more important)"),
-				},
-				call: async ({ content, importance }) => {
-					if (!embeddingModelConfig.model) {
-						return "Memory creation skipped: embedding model not configured";
-					}
-					await createMemory(
-						content,
-						importance,
-						embeddingModelConfig.modelName,
-						embeddingModelConfig.model.openRouter
-					);
-					return `Memory created successfully with importance ${importance}/10`;
-				},
-			}),
-			tool({
-				name: "WriteTodo",
+			profileReadTool,
+			profileWriteTool,
+			queryDatabaseTool,
+			scratchpadTool,
+			{
+				name: "PlanReasoning",
 				description:
-					"Create a new todo or update an existing one. If id is provided, updates the existing todo; otherwise creates a new one.",
+					"Allows the coach to create a reasoning plan. Should contain a rationale for proposed plan adjustments, explain how new strategies reinforce each other, describe how they build upon the users current profile and map how they accelerate progress toward main goal.",
 				schema: {
-					id: z.string().optional().describe("The todo ID to update (omit to create new)"),
-					title: z.string().describe("Short title for the todo"),
-					content: z.string().describe("Detailed content/instructions for the todo"),
-					weekdays: z
-						.array(z.number().min(0).max(6))
-						.optional()
-						.describe(
-							"Days of week this todo should be shown (0=Sunday, 1=Monday, ... 6=Saturday). Omit for daily todos."
-						),
+					plan: z.string().describe("The reasoning plan"),
 				},
-				call: async ({ id, title, content, weekdays }) => {
-					try {
-						const result = await writeTodo({
-							id: id ? JSON.parse(id) : undefined,
-							title,
-							content,
-							weekdays,
-						});
-						return JSON.stringify({
-							success: true,
-							todo: result,
-							action: id ? "updated" : "created",
-						});
-					} catch (error) {
-						return JSON.stringify({
-							success: false,
-							error: error instanceof Error ? error.message : String(error),
-						});
-					}
+				call: async ({ plan }) => {
+					console.log("Received reasoning plan:", plan);
+					return "Plan reasoning received.";
 				},
-			}),
-			tool({
-				name: "DeleteTodo",
-				description: "Delete a todo by its ID",
-				schema: {
-					id: z.string().describe("The todo ID to delete"),
-				},
-				call: async ({ id }) => {
-					try {
-						await deleteTodo(JSON.parse(id));
-						return JSON.stringify({ success: true });
-					} catch (error) {
-						return JSON.stringify({
-							success: false,
-							error: error instanceof Error ? error.message : String(error),
-						});
-					}
-				},
-			}),
-			tool({
-				name: "GetTodos",
-				description: "Get all todos with their current status and completion statistics",
+			},
+			{
+				name: "EndSession",
+				description: "Marks the coaching session as complete",
 				schema: {},
 				call: async () => {
-					try {
-						const stats = await getTodoStats();
-						return JSON.stringify({
-							success: true,
-							todos: stats,
-						});
-					} catch (error) {
-						return JSON.stringify({
-							success: false,
-							error: error instanceof Error ? error.message : String(error),
-						});
-					}
+					setShowCompleteButton(true);
+					return "Session marked as complete.";
 				},
-			}),
+			},
 		],
-		[
-			getProfile,
-			updateProfile,
-			updatePlan,
-			createMemory,
-			embeddingModelConfig,
-			writeTodo,
-			deleteTodo,
-			getTodoStats,
-		]
+		[profileWriteTool, profileReadTool, queryDatabaseTool, scratchpadTool]
 	);
 
 	// Inject tools into agent when it's created
 	useEffect(() => {
 		if (agent) {
+			agent.setSystemPrompt(getCoachPrompt(profile.getProfile(), scratchpad));
 			// Override the act method to include tools
 			const originalAct = agent.act.bind(agent);
 			agent.act = async (message, _, onProgress) => {
-				const ragOptions = embeddingModelConfig.model
-					? {
-							enableRAG: true,
-							embeddingModel: embeddingModelConfig.modelName,
-							openRouter: embeddingModelConfig.model,
-						}
-					: undefined;
-				return originalAct(message, tools, onProgress, ragOptions);
+				return originalAct(message, tools, onProgress);
 			};
-
-			getPromptHistoryData(5).then((history) => {
-				const systemPrompt = getCoachPrompt(
-					isOnboarding,
-					settings.coach_traits ?? [],
-					settings.coach_personality,
-					history
-				);
-
-				if (isOnboarding) {
-					if (agent.context.conversation.length === 0) {
-						agent.addAgentMessage(
-							`
-Hello! I'm your Coach here to condition you. Tell me about your goals and any previous experience you have.
-             `.trim()
-						);
-					}
-				}
-
-				agent.setSystemPrompt(systemPrompt);
-				setLoading(false);
-			});
+			setLoading(false);
 		}
-	}, [
-		agent,
-		isOnboarding,
-		tools,
-		settings.coach_traits,
-		settings.coach_personality,
-		getPromptHistoryData,
-	]);
+	}, [agent, profile, tools]);
 
 	if (loading) {
 		return (
@@ -717,7 +493,7 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 				/>
 
 				<AnimatePresence>
-					{showCompleteButton && isOnboarding && onOnboardingComplete && (
+					{showCompleteButton && (
 						<motion.div
 							initial={{ opacity: 0, y: 20, scale: 0.95 }}
 							animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -731,7 +507,7 @@ Hello! I'm your Coach here to condition you. Tell me about your goals and any pr
 								size="lg"
 							>
 								<Sparkles className="w-5 h-5 mr-2" />
-								Complete Onboarding
+								Complete
 							</Button>
 						</motion.div>
 					)}

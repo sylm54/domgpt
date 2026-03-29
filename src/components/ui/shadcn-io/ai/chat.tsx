@@ -191,13 +191,13 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 	) => {
 		return parts.map((part, idx) => {
 			if (part.type === "text") {
-				return <Response key={idx}>{part.text}</Response>;
+				return <Response key={part.text}>{part.text}</Response>;
 			}
 
 			if (part.type === "thinking") {
 				// Show reasoning UI; streaming flag controls auto-open and spinner state
 				return (
-					<Reasoning key={idx} isStreaming={isStreaming} defaultOpen={isStreaming}>
+					<Reasoning key={part.text} isStreaming={isStreaming} defaultOpen={isStreaming}>
 						<ReasoningTrigger />
 						<ReasoningContent>{part.text}</ReasoningContent>
 					</Reasoning>
@@ -213,7 +213,7 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 					return tool_display(part);
 				}
 				return (
-					<Tool key={idx} className="overflow-auto">
+					<Tool key={String(part.tool_output)} className="overflow-auto">
 						<ToolHeader type={`tool-${headerType}`} state={toolState} />
 						<ToolContent>
 							<ToolInput input={{ name: part.tool, input: part.tool_input }} />
@@ -262,7 +262,7 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 									if (part.type === "text") {
 										return (
 											<div
-												key={idx}
+												key={part.text}
 												className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm"
 											>
 												<div className="flex items-center gap-2 font-medium text-primary">
@@ -279,7 +279,7 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 									// For non-text event parts, show a JSON-like inspector
 									return (
 										<div
-											key={idx}
+											key={JSON.stringify(part, null, 2)}
 											className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm"
 										>
 											<div className="flex items-center gap-2 font-medium text-primary">
@@ -303,7 +303,7 @@ export const Chat = forwardRef<HTMLDivElement, ChatProps>(function Chat(
 								<div className="flex flex-col gap-2">
 									{msg.content.map((part, idx) => (
 										<div
-											key={idx}
+											key={part.type === "text" ? part.text : JSON.stringify(part)}
 											className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-foreground/80"
 										>
 											<div className="flex items-center gap-2 font-medium text-primary">

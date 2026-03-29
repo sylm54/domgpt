@@ -5,11 +5,13 @@ import { useProfileStore } from "@/data/profile";
 import { cn } from "@/lib/utils";
 import { getChallengePlannerPrompt } from "@/prompts/challenge";
 import type { Challenge } from "@/types/user";
-import { ChallengeAgent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
 import { userMessage } from "../../lib/models";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Agent } from "@/lib/agent";
+import { useProfileReadTool } from "@/data/tools/profile-tools";
+import { useQueryDatabaseTool } from "@/data/tools/query-database";
 
 interface ChallengeGeneratorProps {
 	model: Model;
@@ -19,7 +21,7 @@ interface ChallengeGeneratorProps {
 type GenerationPhase = "idle" | "generating" | "complete" | "error";
 
 export function ChallengeGenerator({ model, onChallengesGenerated }: ChallengeGeneratorProps) {
-	const [agent, setAgent] = useState<ChallengeAgent | null>(null);
+	const [agent, setAgent] = useState<Agent | null>(null);
 	const [phase, setPhase] = useState<GenerationPhase>("idle");
 	const [generatedChallenges, setGeneratedChallenges] = useState<Challenge[]>([]);
 
@@ -27,9 +29,10 @@ export function ChallengeGenerator({ model, onChallengesGenerated }: ChallengeGe
 	const { profile } = useProfileStore();
 	const saveChallenge = useSaveChallenge();
 	const deleteOpenChallenges = useDeleteOpenChallenges();
-
+	const readProfile = useProfileReadTool();
+	const queryDatabase = useQueryDatabaseTool();
 	useEffect(() => {
-		setAgent(new ChallengeAgent(model));
+		setAgent(new Agent(model));
 	}, [model]);
 
 	const generateChallenges = async () => {
@@ -50,9 +53,13 @@ export function ChallengeGenerator({ model, onChallengesGenerated }: ChallengeGe
 			// Set the system prompt with user profile and goal
 			agent.setSystemPrompt(getChallengePlannerPrompt(profile));
 
-			// Generate challenges
+			// Create tools array for agent to use
+			const tools = [readProfile, queryDatabase];
+
+			// Generate challenges with tools
 			const response = await agent.act(
-				userMessage("Generate 5-8 challenges based on the user profile and goal.")
+				userMessage("Generate 5-8 challenges based on the user profile and goal."),
+				tools
 			);
 
 			// Extract JSON from response
@@ -86,6 +93,7 @@ export function ChallengeGenerator({ model, onChallengesGenerated }: ChallengeGe
 			for (const description of challengesData.challenges) {
 				if (typeof description === "string" && description.trim()) {
 					const challenge: Challenge = {
+						title: "Placeholder",
 						description: description.trim(),
 						completed: false,
 						created_at: new Date(),

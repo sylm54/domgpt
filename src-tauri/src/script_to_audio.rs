@@ -3,7 +3,7 @@
 
 #![allow(dead_code)]
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use hound::{SampleFormat, WavReader, WavSpec};
 use kuchiki::traits::TendrilSink;
 use kuchiki::NodeRef;

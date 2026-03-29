@@ -22,10 +22,10 @@ You have access to tools to:
 - UpdateMemory: Save important insights about the user for future sessions
 
 Current User Profile:
-${profile.profile}
+${profile.data.profile}
 
 Current Goal:
-${profile.plan.hypno}
+${profile.data.plan.hypno}
 
 History:
 ${history || "No prior history available."}

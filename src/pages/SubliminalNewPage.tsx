@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { getLLMModel, useSettingsStore } from "@/data/settings";
 import type { SubliminalFile } from "@/types/user";
-import { SessionGenerator } from "../components/subliminal";
+// import { SessionGenerator } from "../components/subliminal";
 
 export function SubliminalNewPage() {
 	const { settings } = useSettingsStore();
@@ -14,7 +14,7 @@ export function SubliminalNewPage() {
 		navigate(`/subliminal/play/${session.id}`);
 	};
 
-	const model = getLLMModel(settings.llm_engine, settings.main_model);
+	// const model = getLLMModel(settings.llm_engine, settings.main_model);
 
 	return (
 		<div className="h-full p-4 flex flex-col">
@@ -24,7 +24,7 @@ export function SubliminalNewPage() {
 					Back
 				</Button>
 			</div>
-			<SessionGenerator model={model} onSessionGenerated={handleSessionGenerated} />
+			{/*<SessionGenerator model={model} onSessionGenerated={handleSessionGenerated} />*/}
 		</div>
 	);
 }

@@ -31,15 +31,26 @@ export function AISettings() {
 						id="openrouter-key"
 						type="password"
 						placeholder="sk-or-..."
-						value={settings.llm_engine?.api_key || ""}
-						onChange={(e) =>
-							updateSettings({
-								llm_engine: {
-									type: "openrouter",
+						value={settings.llm_engines.find((e) => e.type === "openrouter")?.api_key || ""}
+						onChange={(e) => {
+							const existingEngines = settings.llm_engines || [];
+							const openrouterIndex = existingEngines.findIndex((e) => e.type === "openrouter");
+							const openrouterEngine = {
+									type: "openrouter" as const,
 									api_key: e.target.value,
-								},
-							})
-						}
+								};
+								let newEngines: Array<{ type: "openrouter" | "nanoGPT"; api_key?: string }>;
+							if (openrouterIndex >= 0) {
+								newEngines = [
+									...existingEngines.slice(0, openrouterIndex),
+									openrouterEngine,
+									...existingEngines.slice(openrouterIndex + 1),
+								];
+							} else {
+								newEngines = [...existingEngines, openrouterEngine];
+							}
+							updateSettings({ llm_engines: newEngines });
+						}}
 						className="h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
 					/>
 					<p className="text-xs text-muted-foreground mt-2">
@@ -69,8 +80,20 @@ export function AISettings() {
 						Language Model
 					</Label>
 					<Select
-						value={settings.main_model || "x-ai/grok-4.1-fast"}
-						onValueChange={(value) => updateSettings({ main_model: value })}
+						value={settings.main_model?.model || "x-ai/grok-4.1-fast"}
+						onValueChange={(value) => {
+							const openrouterEngine = settings.llm_engines.find((e) => e.type === "openrouter");
+							if (!openrouterEngine) {
+								console.error("No openrouter engine configured");
+								return;
+							}
+							updateSettings({
+								main_model: {
+									engine: "openrouter",
+									model: value,
+								},
+							});
+						}}
 					>
 						<SelectTrigger
 							id="model"
@@ -87,47 +110,6 @@ export function AISettings() {
 							</SelectItem>
 						</SelectContent>
 					</Select>
-				</div>
-			</div>
-
-			<div className="space-y-4 p-5 rounded-xl bg-muted/30 border border-border/50">
-				<div className="flex items-center gap-3 pb-2 border-b border-border/50">
-					<div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-						<Cpu className="w-4 h-4 text-primary" />
-					</div>
-					<h3 className="font-medium">Embedding Model</h3>
-				</div>
-
-				<div className="space-y-2">
-					<Label htmlFor="embedding-model" className="text-sm text-muted-foreground">
-						Embedding Model
-					</Label>
-					<Select
-						value={settings.embedding_model || "openai/text-embedding-3-small"}
-						onValueChange={(value) => updateSettings({ embedding_model: value })}
-					>
-						<SelectTrigger
-							id="embedding-model"
-							className="h-11 bg-background/50 border-border/50 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
-						>
-							<SelectValue placeholder="Select embedding model" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="openai/text-embedding-3-small">
-								OpenAI text-embedding-3-small
-							</SelectItem>
-							<SelectItem value="openai/text-embedding-3-large">
-								OpenAI text-embedding-3-large
-							</SelectItem>
-							<SelectItem value="openai/text-embedding-ada-002">
-								OpenAI text-embedding-ada-002
-							</SelectItem>
-						</SelectContent>
-					</Select>
-					<p className="text-xs text-muted-foreground mt-2">
-						Model used for generating embeddings for memory retrieval. Smaller models are faster but
-						less accurate.
-					</p>
 				</div>
 			</div>
 		</div>

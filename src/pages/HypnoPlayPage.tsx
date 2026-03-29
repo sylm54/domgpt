@@ -53,7 +53,7 @@ export function HypnoPlayPage() {
 			</div>
 		);
 	}
-	const model = getLLMModel(settings.llm_engine, settings.main_model || "x-ai/grok-4.1-fast");
+	const model = settings.main_model ? getLLMModel(settings.llm_engines, settings.main_model) : null;
 
 	return (
 		<div className="h-full flex flex-col p-4">

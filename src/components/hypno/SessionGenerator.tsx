@@ -1,19 +1,18 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { useGetPromptHistoryData } from "@/data/history";
 import { useSaveHypnoFile } from "@/data/hypno";
 import { useProfileStore } from "@/data/profile";
-import { useSettingsStore } from "@/data/settings";
-import { setMemory } from "@/lib/utils";
 import { getHypnoPlannerPrompt, getHypnoWriterPrompt } from "@/prompts/hypno";
 import type { HypnoFile, HypnoPlan } from "@/types/user";
-import { HypnoPlannerAgent, HypnoWriterAgent } from "../../lib/agent";
 import type { Model } from "../../lib/models";
 import { tool, userMessage } from "../../lib/models";
 import { type AudioScript, generateAudio, type TtsProgressEvent } from "../../lib/tts-rust";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Agent } from "@/lib/agent";
+import { useScratchpadTool } from "@/data/tools/scratchpad";
+import { useProfileReadTool } from "@/data/tools/profile-tools";
 
 interface SessionGeneratorProps {
 	model: Model;
@@ -221,9 +220,8 @@ function SuccessAnimation() {
 }
 
 export function SessionGenerator({ model, onSessionGenerated }: SessionGeneratorProps) {
-	const getPromptHistoryData = useGetPromptHistoryData();
-	const [plannerAgent, setPlannerAgent] = useState<HypnoPlannerAgent | null>(null);
-	const [writerAgent, setWriterAgent] = useState<HypnoWriterAgent | null>(null);
+	const [plannerAgent, setPlannerAgent] = useState<Agent | null>(null);
+	const [writerAgent, setWriterAgent] = useState<Agent | null>(null);
 	const [phase, setPhase] = useState<GenerationPhase>("planning");
 	const [sessionPlan, setSessionPlan] = useState<HypnoPlan>([]);
 	const [writingProgress, setWritingProgress] = useState({ completed: 0, total: 0 });
@@ -235,12 +233,13 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 	const [isPlanning, setIsPlanning] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const { profile } = useProfileStore();
-	const { settings } = useSettingsStore();
+	const [scratchpad, writeScratchpad] = useScratchpadTool("hypnoplanner");
+	const readProfile = useProfileReadTool();
 	const saveHypnoFile = useSaveHypnoFile();
 
 	useEffect(() => {
-		setPlannerAgent(new HypnoPlannerAgent(model));
-		setWriterAgent(new HypnoWriterAgent(model));
+		setPlannerAgent(new Agent(model));
+		setWriterAgent(new Agent(model));
 	}, [model]);
 
 	const generateSession = async () => {
@@ -311,28 +310,13 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 					return `Section "${section}" created`;
 				},
 			}),
-			tool({
-				name: "UpdateMemory",
-				description:
-					"Save important insights about the user to memory for future sessions. Use this to record what worked well, user responsiveness patterns, effective triggers/anchors/metaphors, and adjustments needed for future sessions.",
-				schema: {
-					content: z.string(),
-				},
-				call: async ({ content }) => {
-					setMemory(content);
-					return "Memory updated successfully";
-				},
-			}),
+			readProfile,
+			writeScratchpad,
 		];
 
-		const history = await getPromptHistoryData(5);
+		plannerAgent.setSystemPrompt(getHypnoPlannerPrompt(profile, scratchpad));
 
-		plannerAgent.setSystemPrompt(getHypnoPlannerPrompt(profile, history));
-
-		await plannerAgent.act(
-			userMessage("Create a hypno session plan based on the user profile and goal."),
-			tools
-		);
+		await plannerAgent.act(userMessage("Create a hypno session plan."), tools);
 
 		return planContent;
 	};
@@ -345,7 +329,7 @@ export function SessionGenerator({ model, onSessionGenerated }: SessionGenerator
 		for (let i = 0; i < planContent.length; i++) {
 			const section = planContent[i];
 
-			writerAgent.setSystemPrompt(getHypnoWriterPrompt(script, section, settings.hypno_style));
+			writerAgent.setSystemPrompt(getHypnoWriterPrompt(script, section));
 
 			const systemContent = writerAgent.context.system[0]?.content[0];
 			const systemText = systemContent?.type === "text" ? systemContent.text : "";

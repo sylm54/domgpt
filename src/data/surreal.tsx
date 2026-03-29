@@ -18,8 +18,10 @@ export function useResetDatabase() {
 		await surreal.delete("info");
 		await surreal.delete("profile");
 		await surreal.delete("history");
-    await surreal.delete("hypno");
+		await surreal.delete("hypno");
 		await surreal.delete("challenges");
+		await surreal.delete("todo_completion");
+		await surreal.delete("todos");
 		localStorage.clear();
 		window.location.reload();
 	};

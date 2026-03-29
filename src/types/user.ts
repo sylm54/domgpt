@@ -1,4 +1,5 @@
 import type { RecordId } from "surrealdb";
+import * as z from "zod";
 
 interface HistoryData {
 	[x: string]: unknown;
@@ -6,108 +7,6 @@ interface HistoryData {
 	type: string;
 	time: Date;
 }
-
-export type HistoryItem = HistorySession | HistoryReflection;
-
-export interface HistorySession extends HistoryData {
-	type: "session";
-	session_type: SessionType;
-	data: RecordId;
-	extra?: string;
-	debrief?: Reflection;
-}
-
-export interface HistoryReflection extends HistoryData {
-	type: "reflection";
-	reflection: Reflection;
-}
-
-export type UserProfile = {
-	profile: string;
-	goal: string;
-	plan: ConditioningPlan;
-	created_at: Date;
-};
-
-export type ConditioningPlan = {
-	hypno: string;
-	challenges: string;
-	user: string;
-	coach: string;
-	interview: string;
-};
-
-export type UserInfo = {
-	id?: RecordId;
-	content: string;
-	tags: string[];
-	created_at: Date;
-	embedding?: number[];
-};
-
-export type Memory = {
-	id?: RecordId;
-	content: string;
-	embedding?: number[];
-	created_at: Date;
-	last_accessed: Date;
-	importance: number;
-};
-
-export type LLMEngine = {
-	type: "openrouter";
-	api_key?: string;
-};
-
-export type TTSEngine = {
-	type: "inbuild";
-};
-
-export type CoachTrait =
-	| "soft" // Gentle and non-confrontational
-	| "motivational" // Inspires and uplifts the user
-	| "encouraging" // More friendly and supportive
-	| "empathetic" // Shows understanding of user's feelings
-	| "direct" // Straightforward and to the point
-	| "informative" // Provides detailed explanations
-	| "intense" // More forceful and goes farther
-	| "pushing" // Expands on the users goals and takes them further
-	| "assertive"; // Act without the users knowledge / doesnt tell the user what exactly it is doing
-
-export type CoachPersonality =
-	| "trainer" // Focused on skill-building and performance
-	| "mentor" // Wise guide sharing knowledge and experience
-	| "ally" // Partner working alongside you as a teammate
-	| "challenger" // Pushes limits and questions assumptions
-	| "supporter"; // Nurturing presence prioritizing emotional support
-
-export type HypnoStyle = "authoritarian" | "permissive" | "balanced";
-
-export type InductionType = "progressive_relaxation" | "visualization" | "breathing";
-
-export type SensoryType = "visual" | "kinesthetic" | "mixed";
-
-export type SuggestionType = "direct" | "indirect" | "permissive";
-
-export type HypnoStyleConfig = {
-	style: HypnoStyle;
-	induction_types: InductionType[];
-	sensory: SensoryType;
-	suggestion: SuggestionType;
-};
-
-export type AppSettings = {
-	llm_engine?: LLMEngine;
-	main_model?: string;
-	tts_engine?: TTSEngine;
-	coach_traits?: CoachTrait[];
-	coach_personality?: CoachPersonality;
-	hypno_style?: HypnoStyleConfig;
-	embedding_engine?: LLMEngine;
-	embedding_model?: string;
-};
-
-export type SessionType = "hypno" | "trigger_gym" | "challenge" | "habit" | "mantra" | "subliminal";
 
 export type Question =
 	| {
@@ -128,47 +27,118 @@ export type Question =
 			answer: string;
 	  };
 
-export type ThoughtAnalysis = {
-	thought: string;
-	is_conducive: boolean;
-	reframed?: string;
-};
+export type HistoryItem = HypnoSession | ChallengeSession | ReflectionSession;
 
-export type ReflectionSummary = {
-	conducive_thoughts: string[];
-	not_conducive_thoughts: string[];
-	key_insights: string;
-	conversation_summary: string;
-};
+export interface HypnoSession extends HistoryData {
+	type: "session_hypno";
+	extra?: string;
+	debrief: Question[];
+}
 
-// Legacy reflection format with questionnaire
-export type LegacyReflection = {
-	questions: Question[];
-	created_at: string;
-};
+export interface ChallengeSession extends HistoryData {
+	type: "challenge_session";
+	user_report: string;
+}
 
-// New socratic reflection format
-export type SocraticReflection = {
-	conversation: {
+export interface ReflectionSession extends HistoryData {
+	type: "reflection_session";
+	report: string;
+	chat: {
 		role: "user" | "assistant";
 		content: string;
 	}[];
-	thought_analysis: ThoughtAnalysis[];
-	summary: ReflectionSummary;
-	created_at: string;
+}
+
+export const UserDataSchema = z.object({
+	profile: z.object({
+		environment: z.string(),
+		habits: z.array(z.string()),
+		strengths: z.array(z.string()),
+		weaknesses: z.array(z.string()),
+		identity: z.string(),
+		constraints: z.array(z.string()),
+		resources: z.array(
+			z.object({ name: z.string(), description: z.string(), tags: z.array(z.string()) })
+		),
+		currentMilestone: z.number(),
+	}),
+	goal: z.object({
+		description: z.string(),
+		motivation: z.string(),
+		targetIdentity: z.string(),
+	}),
+	todos: z.record(
+		z.string(),
+		z.object({
+			title: z.string(),
+			content: z.string(),
+			weekdays: z.array(z.number()).optional(),
+		})
+	),
+	plan: z.object({
+		hypno: z.string(),
+		challenges: z.string(),
+		interview: z.string(),
+	}),
+	milestones: z.array(
+		z.object({
+			title: z.string(),
+			description: z.string(),
+		})
+	),
+	// derived fields
+	currentMilestone: z
+		.object({
+			title: z.string(),
+			description: z.string(),
+		})
+		.describe(
+			"Current milestone derived from profile.currentMilestone index and milestones array [READ ONLY]"
+		),
+	currentResourceTags: z
+		.array(z.string())
+		.describe("List of Tags currently used in profile.resources, used for retrieval [READ ONLY]"),
+});
+
+export type UserData = z.infer<typeof UserDataSchema>;
+
+export const isDebugMode = true;
+
+export type UserProfile = {
+	data: UserData;
+	personality: {
+		coach: string;
+		reflection: string;
+		hypnostyle: string;
+	};
+	created_at: Date;
+	updated_at: Date;
 };
 
-// Combined reflection type
-export type Reflection = LegacyReflection | SocraticReflection;
+export type LLMEngine =
+	| {
+			type: "openrouter";
+			api_key?: string;
+	  }
+	| {
+			type: "nanoGPT";
+			api_key?: string;
+	  };
 
-// Type guards
-export function isLegacyReflection(reflection: Reflection): reflection is LegacyReflection {
-	return "questions" in reflection;
-}
+export type TTSEngine = {
+	type: "inbuild";
+};
 
-export function isSocraticReflection(reflection: Reflection): reflection is SocraticReflection {
-	return "conversation" in reflection;
-}
+export type LLMModel = {
+	engine: LLMEngine extends { type: infer T } ? T : never;
+	model: string;
+};
+
+export type AppSettings = {
+	llm_engines: LLMEngine[];
+	main_model?: LLMModel;
+	tts_engine?: TTSEngine;
+};
 
 export type HypnoPlan = {
 	name: string;
@@ -195,27 +165,28 @@ export type SubliminalFile = {
 
 export type Challenge = {
 	id?: RecordId;
-	description: string;
+	title: string;
 	completed: boolean;
+	description: string;
 	created_at: Date;
 	completed_at?: Date;
-};
-
-export type Todo = {
-	id?: RecordId;
-	title: string;
-	content: string;
-	weekdays?: number[];
-	created_at: Date;
-	updated_at: Date;
 };
 
 export type TodoCompletion = {
 	id?: RecordId;
-	todo_id: RecordId;
+	todo_id: string;
 	date: string;
 	completed: boolean;
 	completed_at?: Date;
+};
+
+export type Todo = {
+	id: string;
+	title: string;
+	content: string;
+	weekdays?: number[];
+	created_at?: Date;
+	updated_at?: Date;
 };
 
 export type TodoWithStatus = Todo & {

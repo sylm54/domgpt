@@ -14,7 +14,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { useLogHistoryData } from "@/data/history";
 import type { Model } from "../../lib/models";
-import type { HypnoFile, Question, Reflection } from "../../types/user";
+import type { HypnoFile, HypnoSession, Question } from "../../types/user";
 import { Questionaire } from "../steering/Questionaire";
 import { Button } from "../ui/button";
 
@@ -161,15 +161,9 @@ export function SessionPlayer({ session, model: _model, onComplete }: SessionPla
 	const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
 	const handleDebriefComplete = async (questions: Question[]) => {
-		const reflection: Reflection = {
-			questions,
-			created_at: new Date().toISOString(),
-		};
 		await logHistoryData({
-			type: "session",
-			debrief: reflection,
-			data: session.id,
-			session_type: "hypno",
+			type: "session_hypno",
+			debrief: questions,
 			time: new Date(),
 		});
 		onComplete?.();

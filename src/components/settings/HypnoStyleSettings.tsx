@@ -1,16 +1,16 @@
 import {
-	Activity,
-	Brain,
-	Check,
 	Crown,
 	Eye,
 	HandHelping,
+	Sparkles,
+	Activity,
+	Wind,
+	Brain,
+	Wand2,
+	Check,
 	Loader2,
 	Play,
 	RefreshCw,
-	Sparkles,
-	Wand2,
-	Wind,
 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -24,17 +24,23 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { getLLMModel, useSettingsStore } from "@/data/settings";
-import { HypnoWriterAgent } from "@/lib/agent";
 import { cn } from "@/lib/utils";
-import { getHypnoWriterPrompt } from "@/prompts/hypno";
-import type {
-	HypnoStyle,
-	HypnoStyleConfig,
-	InductionType,
-	SensoryType,
-	SuggestionType,
-} from "@/types/user";
+
+// Local type definitions since they were removed from @/types/user in the refactor
+type HypnoStyle = "authoritarian" | "balanced" | "permissive";
+
+type InductionType = "progressive_relaxation" | "visualization" | "breathing";
+
+type SensoryType = "visual" | "kinesthetic" | "mixed";
+
+type SuggestionType = "direct" | "indirect" | "permissive";
+
+type HypnoStyleConfig = {
+	style: HypnoStyle;
+	induction_types: InductionType[];
+	sensory: SensoryType;
+	suggestion: SuggestionType;
+};
 
 const styleOptions: {
 	value: HypnoStyle;
@@ -152,20 +158,17 @@ interface HypnoStyleSettingsProps {
 }
 
 export function HypnoStyleSettings({ isOnboarding = false }: HypnoStyleSettingsProps) {
-	const { settings, updateSettings } = useSettingsStore();
-	const hypnoStyle = settings.hypno_style || defaultHypnoStyle;
-
+	// Use local state since hypno_style was removed from AppSettings in the refactor
+	const [hypnoStyle, setHypnoStyle] = useState<HypnoStyleConfig>(defaultHypnoStyle);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [generatedScript, setGeneratedScript] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	const updateHypnoStyle = (updates: Partial<HypnoStyleConfig>) => {
-		updateSettings({
-			hypno_style: {
-				...hypnoStyle,
-				...updates,
-			},
-		});
+		setHypnoStyle((prev) => ({
+			...prev,
+			...updates,
+		}));
 	};
 
 	const handleInductionToggle = (induction: InductionType) => {
@@ -181,38 +184,13 @@ export function HypnoStyleSettings({ isOnboarding = false }: HypnoStyleSettingsP
 		setError(null);
 		setGeneratedScript(null);
 
-		try {
-			const model = getLLMModel(settings.llm_engine!, settings.main_model || "x-ai/grok-4.1-fast");
-			const writerAgent = new HypnoWriterAgent(model);
-
-			// Create a test section for suggestions
-			const testSection = {
-				name: "Suggestions",
-				content: `Create a suggestion phase for deep relaxation and confidence. 
-Use the configured style:
-- Style: ${hypnoStyle.style} (authoritarian=commanding, permissive=gentle, balanced=mix)
-- Induction preference: ${hypnoStyle.induction_types.join(", ")}
-- Sensory focus: ${hypnoStyle.sensory} (visual=imagery, kinesthetic=feelings, mixed=all)
-- Suggestion style: ${hypnoStyle.suggestion} (direct=commands, indirect=metaphors, permissive=possibilities)
-
-Generate a brief example showing the tone and style.`,
-			};
-
-			const prompt = getHypnoWriterPrompt("", testSection, hypnoStyle);
-			writerAgent.setSystemPrompt(prompt);
-
-			const response = await writerAgent.chat(
-				"Write a brief suggestion phase example (2-3 suggestions) demonstrating the configured hypno style."
+		// Test generation functionality removed in refactor - HypnoWriterAgent and getHypnoWriterPrompt no longer exist
+		setTimeout(() => {
+			setError(
+				"This feature is currently unavailable. The hypnosis script generation has been refactored."
 			);
-
-			const scriptText = response.content.map((c) => (c.type === "text" ? c.text : "")).join("");
-
-			setGeneratedScript(scriptText);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to generate example");
-		} finally {
 			setIsGenerating(false);
-		}
+		}, 1000);
 	};
 
 	return (

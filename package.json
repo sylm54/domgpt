@@ -4,10 +4,10 @@
 	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
-  	"dev": "vite",
-  	"build": "tsc && vite build",
-  	"preview": "vite preview",
-  	"tauri": "tauri"
+		"dev": "vite",
+		"build": "tsc && vite build",
+		"preview": "vite preview",
+		"tauri": "tauri"
 	},
 	"dependencies": {
 		"@ai-sdk/openai": "^2.0.42",
@@ -40,7 +40,9 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"crunker": "^2.4.0",
+		"fast-json-patch": "^3.1.1",
 		"harden-react-markdown": "^1.1.5",
+		"jmespath": "^0.16.0",
 		"jotai": "^2.15.0",
 		"katex": "^0.16.25",
 		"kokoro-js": "^1.2.1",

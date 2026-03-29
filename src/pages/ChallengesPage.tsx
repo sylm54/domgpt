@@ -10,7 +10,7 @@ import { ChallengeGenerator, ChallengeList } from "../components/challenge";
 export function ChallengesPage() {
 	const { settings } = useSettingsStore();
 	const navigate = useNavigate();
-	const model = getLLMModel(settings.llm_engine, settings.main_model || "x-ai/grok-4.1-fast");
+	const model = settings.main_model ? getLLMModel(settings.llm_engines, settings.main_model) : null;
 	const [refreshKey, setRefreshKey] = useState(0);
 
 	const handleChallengesGenerated = (challenges: Challenge[]) => {
