@@ -1,16 +1,16 @@
 import { Check } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSettingsStore } from "@/data/settings";
-import { getLLMModel } from "@/data/settings";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ModelDefStep } from "./ModelDefStep";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getLLMModel, useSettingsStore } from "@/data/settings";
 import { GoalSettingStep } from "./GoalSettingStep";
+import { HypnoOnboardingStep } from "./HypnoOnboardingStep";
+import { InitialCoachSessionStep } from "./InitialCoachSessionStep";
+import { MilestonesStep } from "./MilestonesStep";
+import { ModelDefStep } from "./ModelDefStep";
 import { PersonaDesignStep } from "./PersonaDesignStep";
 import { ProfileStep } from "./ProfileStep";
-import { MilestonesStep } from "./MilestonesStep";
-import { InitialCoachSessionStep } from "./InitialCoachSessionStep";
 
 const steps = [
 	{
@@ -37,6 +37,11 @@ const steps = [
 		id: "milestones",
 		title: "Milestones",
 		description: "Create your journey milestones",
+	},
+	{
+		id: "hypno-onboarding",
+		title: "Hypno Profile",
+		description: "Configure your hypnosis experience",
 	},
 	{
 		id: "initial-coach-session",
@@ -88,6 +93,8 @@ export function OnboardingWizard() {
 				return <ProfileStep model={model} onComplete={handleNext} />;
 			case "milestones":
 				return <MilestonesStep model={model} onComplete={handleNext} />;
+			case "hypno-onboarding":
+				return <HypnoOnboardingStep model={model} onComplete={handleNext} />;
 			case "initial-coach-session":
 				return <InitialCoachSessionStep onComplete={handleComplete} />;
 			default:

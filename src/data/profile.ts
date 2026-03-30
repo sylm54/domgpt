@@ -37,10 +37,21 @@ export const useProfileStore = create<Profile>()(
 						habits: [],
 						strengths: [],
 						weaknesses: [],
-						beliefs: [],
 						identity: "",
 						constraints: [],
 						resources: [],
+						hypno: {
+							suggestionStyle: "mixed",
+							inductionNotes: "",
+							sensoryModalities: [],
+							language: {
+								selfReferentialPhrases: [],
+								imagery: [],
+								themes: [],
+								emotionalVocab: [],
+								idealSelfDescription: "",
+							},
+						},
 						currentMilestone: 0,
 					},
 					goal: {

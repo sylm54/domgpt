@@ -1,12 +1,12 @@
 import { Loader2, User } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { Agent } from "@/lib/agent";
-import { tool } from "@/lib/models";
-import { useProfileStore } from "@/data/profile";
-import { Chat } from "@/components/ui/shadcn-io/ai/chat";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Chat } from "@/components/ui/shadcn-io/ai/chat";
+import { useProfileStore } from "@/data/profile";
+import { Agent } from "@/lib/agent";
+import { tool } from "@/lib/models";
 import { getProfileSettingPrompt } from "@/prompts/coach";
 
 interface ProfileStepProps {
@@ -66,7 +66,6 @@ Let's start building your profile together. Have you tried working toward this g
 					habits: z.array(z.string()).describe("Current habits and routines"),
 					strengths: z.array(z.string()).describe("The user's strengths and positive attributes"),
 					weaknesses: z.array(z.string()).describe("Areas for improvement"),
-					beliefs: z.array(z.string()).describe("The user's beliefs and mindset"),
 					identity: z.string().describe("How the user sees themselves"),
 					constraints: z.array(z.string()).describe("Limitations or obstacles"),
 					resources: z
@@ -85,7 +84,6 @@ Let's start building your profile together. Have you tried working toward this g
 					habits,
 					strengths,
 					weaknesses,
-					beliefs,
 					identity,
 					constraints,
 					resources,
@@ -96,11 +94,11 @@ Let's start building your profile together. Have you tried working toward this g
 						data: {
 							...currentProfile?.data,
 							profile: {
+								...currentProfile?.data?.profile,
 								environment,
 								habits,
 								strengths,
 								weaknesses,
-								beliefs,
 								identity,
 								constraints,
 								resources,

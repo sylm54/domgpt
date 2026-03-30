@@ -60,6 +60,18 @@ export const UserDataSchema = z.object({
 		resources: z.array(
 			z.object({ name: z.string(), description: z.string(), tags: z.array(z.string()) })
 		),
+		hypno: z.object({
+			suggestionStyle: z.enum(["authoritative", "permissive", "mixed"]),
+			inductionNotes: z.string(),
+			sensoryModalities: z.array(z.enum(["visual", "auditory", "kinesthetic"])),
+			language: z.object({
+        selfReferentialPhrases: z.array(z.string()),
+        imagery: z.array(z.string()),
+        themes: z.array(z.string()),
+        emotionalVocab: z.array(z.string()),
+        idealSelfDescription: z.string(),
+			}),
+		}),
 		currentMilestone: z.number(),
 	}),
 	goal: z.object({

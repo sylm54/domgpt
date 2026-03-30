@@ -1,8 +1,8 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface InitialCoachSessionStepProps {
 	onComplete: () => void;
@@ -78,6 +78,17 @@ export function InitialCoachSessionStep({ onComplete }: InitialCoachSessionStepP
 									<p className="font-medium text-sm">Milestones Set</p>
 									<p className="text-xs text-muted-foreground">
 										Your journey path has been created
+									</p>
+								</div>
+							</div>
+							<div className="flex items-start gap-3">
+								<Badge variant="secondary" className="bg-primary/10 text-primary">
+									✓
+								</Badge>
+								<div className="text-left">
+									<p className="font-medium text-sm">Hypno Profile Ready</p>
+									<p className="text-xs text-muted-foreground">
+										Your hypnosis style and language preferences configured
 									</p>
 								</div>
 							</div>
